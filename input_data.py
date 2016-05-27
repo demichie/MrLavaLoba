@@ -154,15 +154,15 @@ start_from_dist_flag = 0
 # lobe_exponent = 0  => the new lobe is generated from the last one.
 lobe_exponent = 0
 
-# Max_angle_prob is related to the porbability that the direction of 
+# max_slope_prob is related to the porbability that the direction of 
 # the new lobe is close to the maximum slope direction:
-# max_angle_prob = 0 => all the directions have the same probability;
-# max_angle_prob > 0 => the maximum slope direction has a larger 
+# max_slope_prob = 0 => all the directions have the same probability;
+# max_slope_prob > 0 => the maximum slope direction has a larger 
 #                       probaiblity, and it increases with increasing 
 #			value of the parameter;
-# max_angle_prob = 1 => the direction of the new lobe is the maximum
+# max_slope_prob = 1 => the direction of the new lobe is the maximum
 #			slope direction.
-max_angle_prob = 0.96
+max_slope_prob = 0.96
 
 
 # Inertial exponent: 

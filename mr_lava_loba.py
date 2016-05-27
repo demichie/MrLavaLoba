@@ -485,7 +485,7 @@ for flow in range(0,n_flows):
         # PERTURBE THE MAXIMUM SLOPE ANGLE ACCORDING TO PROBABILITY LAW
         
         # this expression define a coefficient used for the direction of the next slope
-        if ( max_angle_prob < 1 ):
+        if ( max_slope_prob < 1 ):
 
             # angle defining the direction of the new slope. when slope=0, then
             # we have an uniform distribution for the possible angles for the next lobe.  
@@ -494,7 +494,7 @@ for flow in range(0,n_flows):
 
             if ( slopedeg > 0.0 ):
 
-                sigma = (1.0 - max_angle_prob ) / max_angle_prob * ( 90.0 - slopedeg ) / slopedeg
+                sigma = (1.0 - max_slope_prob ) / max_slope_prob * ( 90.0 - slopedeg ) / slopedeg
                 rand_angle_new = rtnorm.rtnorm(-180,180,0,sigma)
 
             else:
@@ -686,7 +686,7 @@ for flow in range(0,n_flows):
         # STEP 2: PERTURBE THE MAXIMUM SLOPE ANGLE ACCORDING TO PROBABILITY LAW
         
         # this expression define a coefficient used for the direction of the next slope
-        if ( max_angle_prob < 1 ):
+        if ( max_slope_prob < 1 ):
 
             # angle defining the direction of the new slope. when slope=0, then
             # we have an uniform distribution for the possible angles for the next lobe.  
@@ -695,7 +695,7 @@ for flow in range(0,n_flows):
 
             if ( slopedeg > 0.0 ):
 
-                sigma = (1.0 - max_angle_prob ) / max_angle_prob * ( 90.0 - slopedeg ) / slopedeg
+                sigma = (1.0 - max_slope_prob ) / max_slope_prob * ( 90.0 - slopedeg ) / slopedeg
                 rand_angle_new = rtnorm.rtnorm(-180,180,0,sigma)
 
             else:
