@@ -41,9 +41,9 @@ def ellipse( xc , yc , ax1 , ax2 , angle , X_circle , Y_circle ):
 
 # Main start here
 
-print ""
-print "Mr Lava Loba by M.de' Michieli Vitturi and S.Tarquini"
-print ""
+print ("")
+print ("Mr Lava Loba by M.de' Michieli Vitturi and S.Tarquini")
+print ("")
 
 # read the run parameters form the file inpot_data.py
 from input_data import *
@@ -84,8 +84,8 @@ while condition:
 # create a backup file of the input parameters
 shutil.copy2('input_data.py', backup_file)
 
-print 'Run name',run_name
-print ''
+print ('Run name',run_name)
+print ('')
 
 if ( plot_flow_flag ) or ( plot_lobes_flag):
     #  create plot
@@ -117,7 +117,7 @@ if ( len(shape_name) > 0 ):
         ax.add_collection(PatchCollection(ptchs,facecolor=cccol[nshp,:],edgecolor='k', linewidths=.1))
 
 
-print ''
+print ('')
 
 if ( a_beta == 0 ) and ( b_beta == 0 ):
 
@@ -132,9 +132,9 @@ else:
     alloc_n_lobes = np.int( np.rint( min_n_lobes + 0.5 * ( max_n_lobes - min_n_lobes) \
                                  * np.max( beta_pdf ) ) )
 
-    print 'Flow with the maximum number of lobes',np.argmax( beta_pdf)
+    print ('Flow with the maximum number of lobes',np.argmax( beta_pdf))
 
-print 'Maximum number of lobes',alloc_n_lobes
+print ('Maximum number of lobes',alloc_n_lobes)
 
 
 # initialize the arrays for the lobes variables
@@ -312,7 +312,7 @@ Zflow = np.zeros((ny,nx))
 max_semiaxis = np.sqrt( lobe_area * max_aspect_ratio / np.pi )
 max_cells = np.ceil( 2.0 * max_semiaxis / cell ) + 2
 
-print 'max_semiaxis',max_semiaxis
+print ('max_semiaxis',max_semiaxis)
 
 jtop_array = np.zeros(alloc_n_lobes)
 jbottom_array = np.zeros(alloc_n_lobes)
@@ -341,8 +341,8 @@ if ( saveshape_flag ):
 patch = []
 
 
-print 'End pre-processing'
-print ''
+print ('End pre-processing')
+print ('')
 
 # counter for the re-evaluation of the slope
 flows_counter = 0
@@ -977,9 +977,9 @@ for flow in range(0,n_flows):
 
                 if ( np.max(Zflow_local.shape) > Zflow_local_array.shape[1] ):
 
-                    print cell,new_x1,new_x2,new_angle
+                    print (cell,new_x1,new_x2,new_angle)
 
-                    print Zflow_local
+                    print (Zflow_local)
 
                 Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left] = Zflow_local
 
@@ -1062,18 +1062,18 @@ if ( n_flows > 1):
     # print on screen bar with percentage of flows computed
     last_percentage = 100
     sys.stdout.write('\r')
-    sys.stdout.write("[%-20s] %d%%" % ('='*(last_percentage/5), last_percentage))
+    sys.stdout.write("[%-20s] %d%%" % ('='*20, last_percentage))
     sys.stdout.flush()
 
 elapsed = (time.clock() - start)
 
-print ''
-print ''
-print 'Total number of lobes',n_lobes_tot,'Average number of lobes',np.int(1.0*n_lobes_tot/n_flows)
-print ''
-print 'Time elapsed ' + str(elapsed) + ' sec.'
-print ''
-print 'Saving files'
+print ('')
+print ('')
+print ('Total number of lobes',n_lobes_tot,'Average number of lobes',np.int(1.0*n_lobes_tot/n_flows))
+print ('')
+print ('Time elapsed ' + str(elapsed) + ' sec.')
+print ('')
+print ('Saving files')
 
 if ( saveshape_flag ):
 
@@ -1095,8 +1095,8 @@ if ( saveraster_flag == 1 ):
 
     np.savetxt(output_full, np.flipud(Zflow), header=header, fmt='%1.5f',comments='')
 
-    print ''
-    print output_full + ' saved'
+    print ('')
+    print (output_full + ' saved')
 
     if ( masking_threshold < 1):
 
@@ -1120,7 +1120,7 @@ if ( saveraster_flag == 1 ):
                                                     np.sum( Zflow >0 ) )
 
                 coverage_fraction = area_fraction
-                print coverage_fraction
+                print (coverage_fraction)
                 
 
             if ( coverage_fraction < masking_threshold ): 
@@ -1130,8 +1130,8 @@ if ( saveraster_flag == 1 ):
                 np.savetxt(output_masked, np.flipud((1-masked_Zflow.mask)*Zflow), \
                            header=header, fmt='%1.5f',comments='')
 
-                print ''
-                print output_masked + ' saved'
+                print ('')
+                print (output_masked + ' saved')
 
                 break
 
@@ -1139,8 +1139,8 @@ if ( saveraster_flag == 1 ):
 
     np.savetxt(output_dist, np.flipud(Zdist), header=header, fmt='%4i',comments='')
 
-    print ''
-    print output_dist + ' saved'
+    print ('')
+    print (output_dist + ' saved')
 
     output_dist = run_name + '_dist_masked.asc'
 
@@ -1150,8 +1150,8 @@ if ( saveraster_flag == 1 ):
 
         np.savetxt(output_dist, np.flipud(Zdist), header=header, fmt='%4i',comments='')
 
-        print ''
-        print output_dist + ' saved'
+        print ('')
+        print (output_dist + ' saved')
     
     if ( hazard_flag ):
 
@@ -1159,8 +1159,8 @@ if ( saveraster_flag == 1 ):
         
         np.savetxt(output_haz, np.flipud(Zhazard), header=header, fmt='%1.5f',comments='')
 
-        print ''
-        print output_haz + ' saved'
+        print ('')
+        print (output_haz + ' saved')
 
         if ( masking_threshold < 1):
 
@@ -1194,13 +1194,13 @@ if ( saveraster_flag == 1 ):
             np.savetxt(output_haz_masked, np.flipud((1-masked_Zflow.mask)*Zhazard), \
                        header=header, fmt='%1.5f',comments='')
 
-            print ''
-            print output_haz_masked + ' saved'
+            print ('')
+            print (output_haz_masked + ' saved')
 
     if ( plot_flow_flag ):
 
-        print ""
-        print "Plot solution"
+        print ("")
+        print ("Plot solution")
 
         plt.pcolormesh(Xs, Ys, masked_Zflow)
 

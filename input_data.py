@@ -1,8 +1,5 @@
 # name of the run (used to save the parameters and the output)
-run_name = 'test_Vest' # is the easternmost fissure
-
-# File name of ASCII digital elevation model
-source = "./DEM/vest20_bef73.asc"
+run_name = 'ETNA1981' # is the easternmost fissure
 
 # this is a list of names of exiting *_thickness_*.asc files to be used if
 # you want to start a simulation considering the existence of previous
@@ -42,14 +39,13 @@ plot_lobes_flag = 0
 plot_flow_flag = 0
 
 # Number of flows
-n_flows = 4#600
+n_flows = 250
 
 # Minimum number of lobes generated for each flow
-# if you increase this, and keep everything else constant, the lava advances farther
-min_n_lobes = 100#1000 # changed from 1500 5-1-2016 MAP to give some uncertainty
+min_n_lobes = 350
 
 # Maximum number of lobes generated for each flow
-max_n_lobes = 1500
+max_n_lobes = 350
 
 # The number of lobes of the flow is defined accordingly to a random uniform
 # distribution or to a beta law, as a function of the flow number.
@@ -65,20 +61,17 @@ force_max_length = 0
 
 # Maximum distances (number of chained lobes) from the vent
 # This parameter is used only when force_max_length = 1
-max_length = 10
+max_length = 50
 
 # If volume flag = 1 then the total volume is read in input, and the
 # thickness or the area of the lobes are evaluated according to the
 # flag fixed_dimension_flag and the relationship V = n*area*T.
 # Otherwise the thickness and the area are read in input and the total
 # volume is evaluated (V = n*area*T).
-
-# You either choose to input Volume OR Area and Thickness.
-
 volume_flag = 1
 
 # Total volume (this value is used only when volume_flag = 1) set "1" to be confirmed.
-total_volume = 1000000 #1000000000  # m^3
+total_volume = 18000000  # m^3
 
 # This flag select which dimension of the lobe is fixed when volume_flag=1:
 # fixed_dimension_flag = 1  => the area of the lobes is assigned
@@ -86,7 +79,7 @@ total_volume = 1000000 #1000000000  # m^3
 fixed_dimension_flag = 1
 
 # Area of each lobe ( only effective when volume_flag = 0 or fixed_dimension_flag = 1 )
-lobe_area = 4000   # m^2 MAP- right now this is 20m X 20m which is the resolution of the DEM
+lobe_area = 1000   # m^2
 
 # Thickness of each lobe ( only effective when volume_flag = 0 or fixed_dimension_flag  2 )
 avg_lobe_thickness = 0.002   # m
@@ -96,13 +89,10 @@ avg_lobe_thickness = 0.002   # m
 # thickness_ratio < 1   => the thickness increases with lobe "age"
 # thickness_ratio = 1   => all the lobes have the same thickness
 # thickness_ratio > 1   => the thickness decreases with lobe "age"
-thickness_ratio = 1
-
+thickness_ratio = 0.038
 
 
 # Number of repetitions of the first lobe (useful for initial spreading)
-# this is because you want to control where the spreading is.  
-# a tree with many branches, or a tree with few long branches
 n_init = 1
 
 # This flag controls if the topography is modified by the lobes and if the
@@ -115,7 +105,7 @@ topo_mod_flag = 1
 
 # This parameter is only effective when topo_mod_flag = 1 and defines the
 # number of flows for the re-evaluation of the slope modified by the flow
-n_flows_counter = 10
+n_flows_counter = 5
 
 # This parameter is only effective when topo_mod_flag = 2 and defines the
 # number of lobes for the re-evaluation of the slope modified by the flow
@@ -132,8 +122,7 @@ n_check_loop = 0
 # controlling the modification of the slope due to the presence of the flow.
 # thickening_parameter = 0  => minimum thickening (maximum spreading)
 # thickening_parameter = 1  => maximum thickening produced in the output
-# this is how viscous your lava is. 
-thickening_parameter = 0.9
+thickening_parameter = 0.8533333
 
 # This flag controls which lobes have larger probability:
 # start_from_dist_flag = 1  => the lobes with a larger distance from
@@ -162,7 +151,7 @@ lobe_exponent = 0
 #			value of the parameter;
 # max_slope_prob = 1 => the direction of the new lobe is the maximum
 #			slope direction.
-max_slope_prob = 0.96
+max_slope_prob = 0.5
 
 
 # Inertial exponent: 
@@ -171,7 +160,7 @@ max_slope_prob = 0.96
 # inertial_exponent > 0 => the max probability direction for the new lobe takes 
 #                          into account also the direction of the parent lobe and 
 #                          the inertia increaes with increasing exponent
-inertial_exponent = 0.0
+inertial_exponent = 0.125
 
 # This factor is to choose where the center of the new lobe will be:
 # dist_fact = 0  => the center of the new lobe is on the border of the
@@ -186,13 +175,16 @@ dist_fact = 1.0
 # aspect_ratio_coeff = 0  => the lobe is always a circle
 # aspect_ratio_coeff > 0  => the lobe is an ellipse, with the aspect ratio
 #			     increasing with the slope 
-aspect_ratio_coeff = 20.0
+aspect_ratio_coeff = 2.0
 
 # Maximum aspect ration of the lobes 
-max_aspect_ratio = 5.0
+max_aspect_ratio = 2.5
 
 # Number of points for the lobe profile
 npoints = 30
+
+# File name of ASCII digital elevation model
+source = "etna1978_5m.asc"
 
 # This flag select how multiple initial coordinates are treated:
 # vent_flag = 0  => the initial lobes are on the vents coordinates
@@ -206,23 +198,15 @@ npoints = 30
 # vent_flag = 3  => the initial lobes are on the polyline connecting
 #                   the vents and all the segments of the polyline
 #                   have the same probability
-# this is important for fissures!!!
 
-vent_flag = 1 # i will need 3 for the probability simulations
+vent_flag = 0
 
-#x_vent = [ 602523 , 602857 ]
-#y_vent = [ 486994 , 488375 ]
-#x-isn93	y-isn93
-
-#x_vent = [602923.76 , 602584.90 , 602332.57 ]
-#y_vent = [488342.51 , 487203.40 , 486662.68 ]
-
-x_vent = [437560 ]
-y_vent = [325898 ]
+# Etna_1981_1
+x_vent = [ 497368 ]
+y_vent = [ 4186798 ]
 
 
 # Shapefile name (use '' if no shapefile is present)
-# shape_name = 'colata_1999_west'
 shape_name = ''
 
 
