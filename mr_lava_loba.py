@@ -4,7 +4,6 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
 import numpy as np
 from linecache import getline
-from scipy import interpolate
 from scipy.stats import beta
 from matplotlib.patches import Ellipse
 from matplotlib.path import Path
@@ -235,15 +234,7 @@ if ( plot_lobes_flag ) or ( plot_flow_flag):
 
     plt.savefig('fig_map.png')
 
-# evaluate the gradient at the grid points
-dx = Xs[0,1]-Xs[0,0]
-dy = Ys[1,0]-Ys[0,0]
-
-Fy,Fx = np.gradient(Zs,dx,dy)
-
-# build the interpolation functions for the topography gradient
-Fx_interp = interpolate.interp2d(xs, ys, Fx, kind='linear')
-Fy_interp = interpolate.interp2d(xs, ys, Fy, kind='linear')
+Ztot = Zs
 
 # generate n_test random points on the domain to check if the slope is
 # evaluated correctly
@@ -255,9 +246,21 @@ for j in range(0,n_test):
     x_test = xmin + np.random.uniform(0, 1, size=1)*(xmax-xmin)
     y_test = ymin + np.random.uniform(0, 1, size=1)*(ymax-ymin)
 	
+    xi = (x_test - xmin)/cell
+    yi = (y_test - ymin)/cell
 
-    Fx_test = Fx_interp(x_test,y_test)
-    Fy_test = Fy_interp(x_test,y_test)
+    ix = np.floor(xi)
+    iy = np.floor(yi)
+
+    ix = ix.astype(int)
+    iy = iy.astype(int)
+
+    xi_fract = xi-ix
+    yi_fract = yi-iy
+
+    Fyi = ( yi_fract*( Zs[iy+1,ix+1] - Zs[iy,ix+1] ) + (1.0-yi_fract)*( Zs[iy+1,ix] - Zs[iy,ix] ) ) / cell
+    Fxi = ( xi_fract*( Zs[iy+1,ix+1] - Zs[iy+1,ix] ) + (1.0-xi_fract)*( Zs[iy,ix+1] - Zs[iy,ix] ) ) / cell
+    
     angle_test = np.mod(180 + ( 180 * np.arctan2(Fy_test,Fx_test) / pi ),360)
     slope_test = np.sqrt(np.square(Fx_test)+np.square(Fy_test))
 
@@ -269,7 +272,6 @@ for j in range(0,n_test):
         plt.plot(x_test,y_test,'o')
         plt.plot( [x_test,xt] , [y_test,yt])
 	
-
 # compute the path of maximum slope form the vent
 
 xold = x_vent[0]
@@ -282,8 +284,21 @@ for i in range(0,max_slope_units):
     x_max_slope = xold
     y_max_slope = yold
     
-    Fx_test = Fx_interp(xold,yold)
-    Fy_test = Fy_interp(xold,yold)
+    xi = (xold - xmin)/cell
+    yi = (yold - ymin)/cell
+
+    ix = np.floor(xi)
+    iy = np.floor(yi)
+
+    ix = ix.astype(int)
+    iy = iy.astype(int)
+
+    xi_fract = xi-ix
+    yi_fract = yi-iy
+
+    Fx_test = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
+    Fy_test = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
+    
     angle_test = np.mod(180 + ( 180 * np.arctan2(Fy_test,Fx_test) / pi ),360)
     slope_test = np.sqrt(np.square(Fx_test)+np.square(Fy_test))
     
@@ -382,9 +397,9 @@ for flow in range(0,n_flows):
     thickness_min = 2.0 * thickness_ratio / ( thickness_ratio + 1.0 ) * avg_lobe_thickness
     delta_lobe_thickness = 2.0 * ( avg_lobe_thickness - thickness_min ) / ( n_lobes - 1.0 )
 
-    # print 'n_lobes',n_lobes
-    # print 'thickness_min',thickness_min
-    # print 'delta_lobe_thickness',delta_lobe_thickness
+    # print ('n_lobes',n_lobes)
+    # print ('thickness_min',thickness_min)
+    # print ('delta_lobe_thickness',delta_lobe_thickness)
 
     if ( n_flows > 1):
         # print on screen bar with percentage of flows computed
@@ -398,17 +413,9 @@ for flow in range(0,n_flows):
     if ( topo_mod_flag >= 1) and ( flows_counter == n_flows_counter ):
 
         flows_counter = 0
+
+        Ztot = Zs + filling_parameter * Zflow
         
-        Fy_flow,Fx_flow = np.gradient(Zflow,dx,dy)
-
-        Fx_tot = Fx + filling_parameter * Fx_flow
-        Fy_tot = Fy + filling_parameter * Fy_flow
-
-        # build the interpolation functions for the topography gradient
-        Fx_interp = interpolate.interp2d(xs, ys, Fx_tot, kind='linear')
-        Fy_interp = interpolate.interp2d(xs, ys, Fy_tot, kind='linear')
-
-
     lobes_counter = 0
 
     for i in range(0,n_init):
@@ -473,8 +480,25 @@ for flow in range(0,n_flows):
         
             plt.plot(x[i],y[i],'o')
         
-        Fx_test = Fx_interp(x[i],y[i])
-        Fy_test = Fy_interp(x[i],y[i])
+        # Fx_test = Fx_interp(x[i],y[i])
+        # Fy_test = Fy_interp(x[i],y[i])
+
+        xi = (x[i] - xmin)/cell
+        yi = (y[i] - ymin)/cell
+
+        ix = np.floor(xi)
+        iy = np.floor(yi)
+
+        ix = ix.astype(int)
+        iy = iy.astype(int)
+
+        xi_fract = xi-ix
+        yi_fract = yi-iy
+
+        Fx_test = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
+        Fy_test = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
+
+
     
         # major semi-axis direction
         max_slope_angle = np.mod(180 + ( 180 * np.arctan2(Fy_test,Fx_test) / pi ),360)
@@ -677,8 +701,25 @@ for flow in range(0,n_flows):
 		
         # STEP 1: COMPUTE THE SLOPE AND THE MAXIMUM SLOPE ANGLE
   
-        Fx_lobe = Fx_interp(x[idx],y[idx])
-        Fy_lobe = Fy_interp(x[idx],y[idx])
+        # Fx_lobe = Fx_interp(x[idx],y[idx])
+        # Fy_lobe = Fy_interp(x[idx],y[idx])
+
+        xi = (x[idx] - xmin)/cell
+        yi = (y[idx] - ymin)/cell
+
+        ix = np.floor(xi)
+        iy = np.floor(yi)
+
+        ix = ix.astype(int)
+        iy = iy.astype(int)
+
+        xi_fract = xi-ix
+        yi_fract = yi-iy
+
+        Fx_lobe = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
+        Fy_lobe = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
+
+        
         slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
         # angle defining the direction of maximum slope (max_slope_angle = aspect)
         max_slope_angle = np.mod(180 + ( 180 * np.arctan2(Fy_lobe,Fx_lobe) / pi ),360)
@@ -770,8 +811,25 @@ for flow in range(0,n_flows):
 		   
         # the slope coefficient is evaluated at the point of the boundary of the ellipse
         # definind by the direction of the new lobe
-        Fx_lobe = Fx_interp(x[idx]+delta_x,y[idx]+delta_y)
-        Fy_lobe = Fy_interp(x[idx]+delta_x,y[idx]+delta_y)
+        # Fx_lobe = Fx_interp(x[idx]+delta_x,y[idx]+delta_y)
+        # Fy_lobe = Fy_interp(x[idx]+delta_x,y[idx]+delta_y)
+
+        xi = (x[idx]+delta_x - xmin)/cell
+        yi = (y[idx]+delta_y - ymin)/cell
+
+        ix = np.floor(xi)
+        iy = np.floor(yi)
+
+        ix = ix.astype(int)
+        iy = iy.astype(int)
+
+        xi_fract = xi-ix
+        yi_fract = yi-iy
+
+        Fx_lobe = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
+        Fy_lobe = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
+
+        
         slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
         aspect_ratio = min(max_aspect_ratio,1.0 + aspect_ratio_coeff * slope)
 
@@ -844,8 +902,7 @@ for flow in range(0,n_flows):
                 
             min_ye = np.min(ye)
             max_ye = np.max(ye)
-                
-                
+                               
             i_parent = parent[i]
                 
             # compute the parent lobe
@@ -1001,15 +1058,7 @@ for flow in range(0,n_flows):
 
                     i_first_check = i + n_check_loop
 
-                    # update the slope of the lava deposit only
-                    Fy_flow,Fx_flow = np.gradient(Zflow,dx,dy)
-
-                    Fx_tot = Fx + filling_parameter * Fx_flow
-                    Fy_tot = Fy + filling_parameter * Fy_flow
-
-                    # build the interpolation functions for the topography gradient
-                    Fx_interp = interpolate.interp2d(xs, ys, Fx_tot, kind='linear')
-                    Fy_interp = interpolate.interp2d(xs, ys, Fy_tot, kind='linear')
+                    Ztot = Zs + filling_parameter * Zflow
 
 
             lobes_counter = lobes_counter + 1
@@ -1018,15 +1067,9 @@ for flow in range(0,n_flows):
         if ( topo_mod_flag == 2 ) and ( lobes_counter == n_lobes_counter ):
 		    
             lobes_counter = 0
-            # update the slope of the lava deposit only
-            Fy_flow,Fx_flow = np.gradient(Zflow,dx,dy)
 
-            Fx_tot = Fx + filling_parameter * Fx_flow
-            Fy_tot = Fy + filling_parameter * Fy_flow
+            Ztot = Zs + filling_parameter * Zflow
 
-            # build the interpolation functions for the topography gradient
-            Fx_interp = interpolate.interp2d(xs, ys, Fx_tot, kind='linear')
-            Fy_interp = interpolate.interp2d(xs, ys, Fy_tot, kind='linear')
 
     if ( hazard_flag ):
 
