@@ -4,7 +4,7 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
 import numpy as np
 from linecache import getline
-from scipy.stats import beta
+#from scipy.stats import beta
 from matplotlib.patches import Ellipse
 from matplotlib.path import Path
 import matplotlib.patches as patches
@@ -18,6 +18,7 @@ import sys
 import shutil
 import datetime
 import rtnorm
+
 
 def ellipse( xc , yc , ax1 , ax2 , angle , X_circle , Y_circle ):
 
@@ -37,6 +38,62 @@ def ellipse( xc , yc , ax1 , ax2 , angle , X_circle , Y_circle ):
     ye = yc + X*sin_angle + Y*cos_angle
 
     return (xe,ye)
+
+
+def inellipse( xs,ys,xc_e,yc_e,ax1,ax2,c,s):
+
+    x = xs-xc_e
+    y = ys-yc_e
+
+    inside = ( ( ((x*c+y*s)/ax1)**2 + ((x*s-y*c)/ax2)**2 )<=1 )
+
+    return (inside)
+
+def local_intersection(Xs_local,Ys_local,xc_e,yc_e,ax1,ax2,angle,xv,yv,nv2):
+
+    nx_cell = Xs_local.shape[0]
+    ny_cell = Xs_local.shape[1]
+ 
+    c = np.cos(angle*np.pi/180)
+    s = np.sin(angle*np.pi/180)
+   
+    c1 = c/ax1
+    s1 = s/ax1
+
+    c2 = c/ax2
+    s2 = s/ax2
+
+    xv = xv-xc_e
+    yv = yv-yc_e
+   
+    Xs_local_1d = Xs_local.ravel()
+    Ys_local_1d = Ys_local.ravel()
+               
+    c1xv_p_s1yv = c1*xv + s1*yv
+    c2yv_m_s2yv = c2*yv - s2*xv
+
+    term1 = ( c1**2 + s2**2 ) * Xs_local_1d**2 
+    term2 = ( 2*c1*s1 - 2*c2*s2 ) * Xs_local_1d * Ys_local_1d
+    term3 = np.tensordot( Xs_local_1d , 2*c1*c1xv_p_s1yv - 2*s2*c2yv_m_s2yv , 0 )
+    term4 = ( c2**2 + s1**2 ) * Ys_local_1d**2
+    term5 = np.tensordot( Ys_local_1d , 2*c2*c2yv_m_s2yv + 2*s1*c1xv_p_s1yv , 0 )
+    term6 = c1xv_p_s1yv**2 + c2yv_m_s2yv**2
+
+    term124 = term1+term2+term4
+    term356 = term3+term5+term6
+
+    term_tot = term124+term356.transpose()
+
+    inside = ( term_tot <=1 )
+
+    area_fract_1d = np.sum(inside.astype(float),axis=0)
+
+    # area_fract_1d = area_fract_1d / nv2 
+    area_fract_1d /= nv2 
+
+    area_fract = area_fract_1d.reshape(nx_cell,ny_cell)
+    
+    return (area_fract)
 
 # Main start here
 
@@ -223,6 +280,14 @@ for i_restart in range(0,len(restart_files)):
 
     Zs = Zs + Zflow_old
 
+
+# Define a small grid for lobe-cells intersection
+nv = 20
+xv,yv = np.meshgrid(np.linspace(-0.5*cell,0.5*cell, nv),np.linspace(-0.5*cell,0.5*cell, nv))
+xv = np.reshape(xv,-1)
+yv = np.reshape(yv,-1)
+nv2 = nv*nv
+
 # Create a simple contour plot with labels using default colors.  The
 # inline argument to clabel will control whether the labels are draw
 # over the line segments of the contour, removing the lines beneath
@@ -326,14 +391,15 @@ Zflow = np.zeros((ny,nx))
 
 max_semiaxis = np.sqrt( lobe_area * max_aspect_ratio / np.pi )
 max_cells = np.ceil( 2.0 * max_semiaxis / cell ) + 2
+max_cells = max_cells.astype(int)
 
 print ('max_semiaxis',max_semiaxis)
 
-jtop_array = np.zeros(alloc_n_lobes)
-jbottom_array = np.zeros(alloc_n_lobes)
+jtop_array = np.zeros(alloc_n_lobes, dtype=np.int)
+jbottom_array = np.zeros(alloc_n_lobes, dtype=np.int)
 
-iright_array = np.zeros(alloc_n_lobes)
-ileft_array =np.zeros(alloc_n_lobes)
+iright_array = np.zeros(alloc_n_lobes, dtype=np.int)
+ileft_array =np.zeros(alloc_n_lobes, dtype=np.int)
 
 
 Zhazard = np.zeros((ny,nx))
@@ -405,6 +471,8 @@ for flow in range(0,n_flows):
         # print on screen bar with percentage of flows computed
         last_percentage_5 = np.rint(flow*20.0/(n_flows))
         last_percentage = np.rint(flow*100.0/(n_flows))
+        last_percentage = np.rint(flow*100.0/(n_flows))
+        last_percentage = last_percentage.astype(int)
         sys.stdout.write('\r')
         sys.stdout.write("[%-20s] %d%% %s" % ('='*(last_percentage_5), last_percentage, est_rem_time))
         sys.stdout.flush()
@@ -423,6 +491,8 @@ for flow in range(0,n_flows):
         if ( n_flows == 1 ):
             # print on screen bar with percentage of flows computed
             last_percentage = np.rint(i*20.0/(n_lobes-1))*5
+            last_percentage = last_percentage.astype(int)
+
             sys.stdout.write('\r')
             sys.stdout.write("[%-20s] %d%%" % ('='*(last_percentage/5), last_percentage))
             sys.stdout.flush()
@@ -516,7 +586,7 @@ for flow in range(0,n_flows):
 
             slopedeg = 180.0 * np.arctan(slope) / pi
 
-            if ( slopedeg > 0.0 ):
+            if ( slopedeg > 0.0 ) and ( max_slope_prob > 0 ):
 
                 sigma = (1.0 - max_slope_prob ) / max_slope_prob * ( 90.0 - slopedeg ) / slopedeg
                 rand_angle_new = rtnorm.rtnorm(-180,180,0,sigma)
@@ -559,39 +629,26 @@ for flow in range(0,n_flows):
             min_ye = np.min(ye)
             max_ye = np.max(ye)
 
-            verts = np.zeros((npoints, 2))
-
-            verts[0:npoints,0] = xe
-            verts[0:npoints,1] = ye
-    
-            path1 = Path(verts) 
-
             i_left = np.argmax(xs>min_xe)-1
             i_right = np.argmax(xs>max_xe)+1
             
             j_bottom = np.argmax(ys>min_ye)-1
             j_top = np.argmax(ys>max_ye)+1
         
-            Xs_local_1d = np.reshape(Xs[j_bottom:j_top,i_left:i_right],-1)
-            Ys_local_1d = np.reshape(Ys[j_bottom:j_top,i_left:i_right],-1)
-                
-            nxy_local = Xs_local_1d.shape[0]
-		
-            points_local = np.zeros((nxy_local, 2))
-                
-            points_local[0:nxy_local,0] = Xs_local_1d
-            points_local[0:nxy_local,1] = Ys_local_1d
-                
-            Zflow_1d_local = path1.contains_points(points_local, transform=None, radius=0.0)
-                
-            Zflow_local = np.reshape(Zflow_1d_local,(j_top-j_bottom,i_right-i_left))
+            Xs_local = Xs[j_bottom:j_top,i_left:i_right]
+            Ys_local = Ys[j_bottom:j_top,i_left:i_right]
 
+            area_fract = local_intersection(Xs_local,Ys_local,x[i],y[i],x1[i],x2[i],angle[i],xv,yv,nv2)
+
+            Zflow_local = area_fract
+            Zflow_local_int = np.ceil(area_fract)
+            Zflow_local_int = Zflow_local_int.astype(int)
+         
             lobe_thickness = thickness_min + ( i-1 ) * delta_lobe_thickness
 
-            Zflow[j_bottom:j_top,i_left:i_right] = Zflow[j_bottom:j_top,i_left:i_right] \
-                                                   + lobe_thickness * Zflow_local
+            Zflow[j_bottom:j_top,i_left:i_right] += lobe_thickness * Zflow_local
 
-            Zdist_local = Zflow_local * dist_int[i] + 9999 * ( Zflow_local == 0 )
+            Zdist_local = Zflow_local_int * dist_int[i] + 9999 * ( Zflow_local == 0 )
 
             Zdist[j_bottom:j_top,i_left:i_right] = np.minimum( Zdist[j_bottom:j_top,i_left:i_right] \
                                                                , Zdist_local )
@@ -606,7 +663,7 @@ for flow in range(0,n_flows):
 
                 # store the local array 
 
-                Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left] = Zflow_local
+                Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left] = Zflow_local_int
                 
                
             lobes_counter = lobes_counter + 1
@@ -716,8 +773,11 @@ for flow in range(0,n_flows):
         xi_fract = xi-ix
         yi_fract = yi-iy
 
-        Fx_lobe = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
-        Fy_lobe = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
+        Fx_lobe = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) \
+                    + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
+
+        Fy_lobe = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) \
+                    + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
 
         
         slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
@@ -734,7 +794,7 @@ for flow in range(0,n_flows):
 
             slopedeg = 180.0 * np.arctan(slope) / pi
 
-            if ( slopedeg > 0.0 ):
+            if ( slopedeg > 0.0 ) and ( max_slope_prob > 0.0 ):
 
                 sigma = (1.0 - max_slope_prob ) / max_slope_prob * ( 90.0 - slopedeg ) / slopedeg
                 rand_angle_new = rtnorm.rtnorm(-180,180,0,sigma)
@@ -826,8 +886,11 @@ for flow in range(0,n_flows):
         xi_fract = xi-ix
         yi_fract = yi-iy
 
-        Fx_lobe = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
-        Fy_lobe = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
+        Fx_lobe = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) \
+                    + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
+
+        Fy_lobe = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) \
+                    + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
 
         
         slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
@@ -881,7 +944,6 @@ for flow in range(0,n_flows):
             shape_verts[0:npoints-1,0] = xe[0:npoints-1]
             shape_verts[0:npoints-1,1] = ye[0:npoints-1]
 
-
             w.poly(parts=[shape_verts.tolist()])
             w.record(str(i+1),dist_int[i],str(descendents[i]),str(parent[i]),str(flow+1))
   
@@ -890,12 +952,7 @@ for flow in range(0,n_flows):
             
             # compute the last lobe 
             [ xe , ye ] = ellipse( x[i], y[i], x1[i], x2[i], angle[i] , X_circle , Y_circle )
-            
-            verts[0:npoints,0] = xe
-            verts[0:npoints,1] = ye
-                
-            path1 = Path(verts) 
-
+         
             # boundgin box for the lobe
             min_xe = np.min(xe)
             max_xe = np.max(xe)
@@ -904,37 +961,7 @@ for flow in range(0,n_flows):
             max_ye = np.max(ye)
                                
             i_parent = parent[i]
-                
-            # compute the parent lobe
-            [ x_parent , y_parent ] = ellipse( x[i_parent], y[i_parent], x1[i_parent], \
-                                               x2[i_parent], angle[i_parent] , \
-                                               X_circle , Y_circle )
-		
-            verts_parent = np.zeros((npoints, 2))
-                
-            verts_parent[0:npoints,0] = x_parent
-            verts_parent[0:npoints,1] = y_parent
-                
-            path_parent = Path(verts_parent) 
-
-            # CHECK HERE: PROBABLY CAN BE SKIPPED FROM HERE
-
-            # bounding box for the parent lobe
-            # min_x_parent = np.min(x_parent)
-            # max_x_parent = np.max(x_parent)
-                
-            # min_y_parent = np.min(y_parent)
-            # max_y_parent = np.max(y_parent)
-
-            # bounding box for the union of the lobe and the parent
-            # min_xe = np.min([min_xe,min_x_parent])
-            # max_xe = np.max([max_xe,max_x_parent])
-            
-            # min_ye = np.min([min_ye,min_y_parent])
-            # max_ye = np.max([max_ye,max_y_parent])
-
-            # TO HERE
-            
+                           
             if ( min_xe < xs[0] ):
 
                 i_left = 0
@@ -984,22 +1011,17 @@ for flow in range(0,n_flows):
             else:
 
                 j_top = np.argmax(ys>max_ye)+1
+
+            Xs_local = Xs[j_bottom:j_top,i_left:i_right]
+            Ys_local = Ys[j_bottom:j_top,i_left:i_right]
         
-            Xs_local_1d = np.reshape(Xs[j_bottom:j_top,i_left:i_right],-1)
-            Ys_local_1d = np.reshape(Ys[j_bottom:j_top,i_left:i_right],-1)
-                
-            nxy_local = Xs_local_1d.shape[0]
-		
-            points_local = np.zeros((nxy_local, 2))
-                
-            points_local[0:nxy_local,0] = Xs_local_1d
-            points_local[0:nxy_local,1] = Ys_local_1d
 
-            # find the point of the local grid contained in the lobe    
-            Zflow_1d_local = path1.contains_points(points_local, transform=None, radius=0.0)
+            area_fract = local_intersection(Xs_local,Ys_local,x[i],y[i],x1[i],x2[i],angle[i],xv,yv,nv2)
+            Zflow_local = area_fract
+            Zflow_local_int = np.ceil(area_fract)
+            Zflow_local_int = Zflow_local_int.astype(int)
+            Zdist_local = Zflow_local_int * dist_int[i] + 9999 * ( Zflow_local == 0 )
 
-            # reshape to a 2D array
-            Zflow_local = np.reshape(Zflow_1d_local,(j_top-j_bottom,i_right-i_left))
 
             # update the minimum distance (number of lobes) from the vent
             Zdist_local = Zflow_local * dist_int[i] + 9999 * ( Zflow_local == 0 )
@@ -1007,20 +1029,10 @@ for flow in range(0,n_flows):
             Zdist[j_bottom:j_top,i_left:i_right] = np.minimum( Zdist[j_bottom:j_top,i_left:i_right] , \
                                                                Zdist_local )
                 
-            # find the point of the local grid contained in the parent lobe    
-            Zflow_parent_1d_local = path_parent.contains_points(points_local, transform=None, radius=0.0)
-
-            # reshape to a 2D array
-            Zflow_parent_local = np.reshape(Zflow_parent_1d_local,(j_top-j_bottom,i_right-i_left))
-
-            # eliminate from the grid points inside the new lobe those also inside the parent lobe
-            Zflow_local = np.bitwise_and( Zflow_local , ( np.invert(Zflow_parent_local) ) )
-
             lobe_thickness = thickness_min + ( i-1 ) * delta_lobe_thickness
 
             # update the thickness for the grid points selected
-            Zflow[j_bottom:j_top,i_left:i_right] = Zflow[j_bottom:j_top,i_left:i_right] + \
-                                                   lobe_thickness*Zflow_local
+            Zflow[j_bottom:j_top,i_left:i_right] += lobe_thickness*Zflow_local
 
             jtop_array[i] = j_top
             jbottom_array[i] = j_bottom
@@ -1038,7 +1050,7 @@ for flow in range(0,n_flows):
 
                     print (Zflow_local)
 
-                Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left] = Zflow_local
+                Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left] = Zflow_local_int
 
             if ( n_check_loop > 0 ) and ( i > i_first_check ):
 
@@ -1083,8 +1095,7 @@ for flow in range(0,n_flows):
             i_right = iright_array[i]
             i_left = ileft_array[i]
 
-            Zhazard[j_bottom:j_top,i_left:i_right] = \
-                                                   Zhazard[j_bottom:j_top,i_left:i_right] + descendents[i] \
+            Zhazard[j_bottom:j_top,i_left:i_right] += descendents[i] \
                                                    * Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left]
 
         
@@ -1145,9 +1156,9 @@ if ( saveraster_flag == 1 ):
 
         max_lobes = np.int(np.floor(np.max(Zflow/avg_lobe_thickness)))
 
-        for i in range(1,max_lobes):
+        for i in range(1,10*max_lobes):
 
-            masked_Zflow = ma.masked_where(Zflow < i*avg_lobe_thickness, Zflow)
+            masked_Zflow = ma.masked_where(Zflow < i*0.1*avg_lobe_thickness, Zflow)
 
             total_Zflow = np.sum(Zflow)
 
@@ -1163,10 +1174,18 @@ if ( saveraster_flag == 1 ):
                                                     np.sum( Zflow >0 ) )
 
                 coverage_fraction = area_fraction
-                print (coverage_fraction)
+                #print (coverage_fraction)
                 
 
             if ( coverage_fraction < masking_threshold ): 
+
+                if ( flag_threshold == 1 ):
+                
+                    print('')
+                    print ('Total volume',cell**2*total_Zflow, \
+                           ' Masked volume',cell**2*np.sum( masked_Zflow ), \
+                           ' Volume fraction',coverage_fraction)
+
 
                 output_masked = run_name + '_thickness_masked.asc'
 

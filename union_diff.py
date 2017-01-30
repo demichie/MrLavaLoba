@@ -1,23 +1,8 @@
-
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import matplotlib.pyplot as plt
 import numpy as np
 from linecache import getline
-from scipy import interpolate
-from matplotlib.patches import Ellipse
-from matplotlib.path import Path
-import matplotlib.patches as patches
-from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection
-import shapefile
-import time
-import pickle
-import os
-import numpy.ma as ma
 
-source1 = 'LFS1_2001_032_thickness_masked.asc'
-source2 = 'LFS1_2001_033_thickness_masked.asc'
+source1 = 'ET_1999W_LE09_MSP05_020_thickness_masked.asc'
+source2 = 'ET_1999W_LE09_MSP05_021_thickness_masked.asc'
 
 # Parse the header using a loop and
 # the built-in linecache module
@@ -85,6 +70,11 @@ for i in range(0,ny):
    Zs2[i,0:nx-1] = arr[ny-i-1,0:nx-1]
 
 
+vol1 = np.sum(Zs1) * cell**2
+vol2 = np.sum(Zs2) * cell**2
+
+print('Volume 1',vol1,'Volume 2',vol2)
+
 Zs_union = np.maximum(Zs1,Zs2)
 
 Zs_union = Zs_union / np.maximum(Zs_union,1)
@@ -99,7 +89,10 @@ area_inters = np.sum(Zs_inters) * cell**2
 
 # area_inters = np.count_nonzero(Zs_inters) * cell**2
 
-print area_inters,area_union,area_inters/area_union
+fitting_parameter = area_inters/area_union
+
+print('Union area',area_union,'Intersection area',area_inters)
+print('Fitting parameter',fitting_parameter)
 
 Zs1_mean = np.mean(Zs1*Zs_inters) * nx*ny / np.count_nonzero(Zs_inters)
 Zs2_mean = np.mean(Zs2*Zs_inters) * nx*ny / np.count_nonzero(Zs_inters)
@@ -107,20 +100,25 @@ Zs2_mean = np.mean(Zs2*Zs_inters) * nx*ny / np.count_nonzero(Zs_inters)
 Zs1_vol = Zs1_mean * area_inters
 Zs2_vol = Zs2_mean * area_inters
 
-print Zs1_vol,Zs2_vol
+print('Volume 1 in intersection',Zs1_vol,'Volume 2 in intersection',Zs2_vol)
 
 Zs_diff = np.abs(Zs1-Zs2)
 
 Zs_diff = Zs_diff * Zs_inters
 
 avg_thick_diff = np.mean(Zs_diff) * nx*ny / np.count_nonzero(Zs_inters)
-# std_thick_diff = np.std(Zs_diff) * nx*ny / np.count_nonzero(Zs_inters)
+std_thick_diff = np.std(Zs_diff) * nx*ny / np.count_nonzero(Zs_inters)
 vol_diff = avg_thick_diff * area_inters
 
 
 rel_err_vol = vol_diff / np.maximum(Zs1_vol,Zs2_vol)
 
-print avg_thick_diff,vol_diff,rel_err_vol
+# print('Average thickness difference',avg_thick_diff,'Std thickness difference',std_thick_diff)
+
+print('Thickness relative error',rel_err_vol)
+
+
+
 
 
 
