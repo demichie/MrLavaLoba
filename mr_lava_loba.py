@@ -469,7 +469,7 @@ for flow in range(0,n_flows):
 
     if ( n_flows > 1):
         # print on screen bar with percentage of flows computed
-        last_percentage_5 = np.rint(flow*20.0/(n_flows))
+        last_percentage_5 = np.rint(flow*20.0/(n_flows)).astype(int)
         last_percentage = np.rint(flow*100.0/(n_flows))
         last_percentage = np.rint(flow*100.0/(n_flows))
         last_percentage = last_percentage.astype(int)
