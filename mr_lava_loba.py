@@ -177,7 +177,7 @@ print ('')
 
 if ( a_beta == 0 ) and ( b_beta == 0 ):
 
-    alloc_n_lobes = max_n_lobes
+    alloc_n_lobes = int(max_n_lobes)
 
 else:
 
@@ -770,14 +770,20 @@ for flow in range(0,n_flows):
         ix = ix.astype(int)
         iy = iy.astype(int)
 
+	ix = min(ix,nx-1)
+	iy = min(iy,ny-1)
+
+	ix1 = min(ix+1,nx-1)
+	iy1 = min(iy+1,ny-1)
+
         xi_fract = xi-ix
         yi_fract = yi-iy
 
-        Fx_lobe = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) \
-                    + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
+        Fx_lobe = ( xi_fract*( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
+                    + (1.0-xi_fract)*( Ztot[iy,ix1] - Ztot[iy,ix] ) ) / cell
 
-        Fy_lobe = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) \
-                    + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
+        Fy_lobe = ( yi_fract*( Ztot[iy1,ix1] - Ztot[iy,ix1] ) \
+                    + (1.0-yi_fract)*( Ztot[iy1,ix] - Ztot[iy,ix] ) ) / cell
 
         
         slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
@@ -883,14 +889,22 @@ for flow in range(0,n_flows):
         ix = ix.astype(int)
         iy = iy.astype(int)
 
+	ix = min(ix,nx-1)
+	iy = min(iy,ny-1)
+
+	ix1 = min(ix+1,nx-1)
+	iy1 = min(iy+1,ny-1)
+
         xi_fract = xi-ix
         yi_fract = yi-iy
 
-        Fx_lobe = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) \
-                    + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
 
-        Fy_lobe = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) \
-                    + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
+        Fx_lobe = ( xi_fract*( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
+                    + (1.0-xi_fract)*( Ztot[iy,ix1] - Ztot[iy,ix] ) ) / cell
+
+        Fy_lobe = ( yi_fract*( Ztot[iy1,ix1] - Ztot[iy,ix1] ) \
+                    + (1.0-yi_fract)*( Ztot[iy1,ix] - Ztot[iy,ix] ) ) / cell
+
 
         
         slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
