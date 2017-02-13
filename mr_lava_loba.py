@@ -303,8 +303,10 @@ if ( plot_lobes_flag ) or ( plot_flow_flag):
 Ztot = np.zeros((ny,nx))
 Ztot_temp = np.zeros((ny,nx))
 
-Ztot[:] = Zs[:]
-Ztot_temp[:] = Zs[:]
+np.copyto(Ztot,Zs)
+np.copyto(Ztot_temp,Zs)
+#Ztot[:] = Zs[:]
+#Ztot_temp[:] = Zs[:]
 
 # generate n_test random points on the domain to check if the slope is
 # evaluated correctly
@@ -488,7 +490,7 @@ for flow in range(0,n_flows):
         flows_counter = 0
 
         # Ztot[:] = Ztot_temp[:]
-        np.copyto(Ztot_temp,Ztot)
+        np.copyto(Ztot,Ztot_temp)
         
     lobes_counter = 0
 
@@ -1098,7 +1100,7 @@ for flow in range(0,n_flows):
                     i_first_check = i + n_check_loop
 
                     # Ztot[:] = Ztot_temp[:]
-                    np.copyto(Ztot_temp,Ztot)
+                    np.copyto(Ztot,Ztot_temp)
 
 
             lobes_counter = lobes_counter + 1
@@ -1109,7 +1111,7 @@ for flow in range(0,n_flows):
             lobes_counter = 0
 
             # Ztot[:] = Ztot_temp[:]
-            np.copyto(Ztot_temp,Ztot)
+            np.copyto(Ztot,Ztot_temp)
 
 
     if ( hazard_flag ):
@@ -1157,6 +1159,8 @@ print ('')
 print ('Time elapsed ' + str(elapsed) + ' sec.')
 print ('')
 print ('Saving files')
+
+# print ('Max thickness',np.max(Ztot-Zs),' m')
 
 if ( saveshape_flag ):
 
