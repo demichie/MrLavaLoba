@@ -299,7 +299,12 @@ if ( plot_lobes_flag ) or ( plot_flow_flag):
 
     plt.savefig('fig_map.png')
 
-Ztot = Zs
+
+Ztot = np.zeros((ny,nx))
+Ztot_temp = np.zeros((ny,nx))
+
+Ztot[:] = Zs[:]
+Ztot_temp[:] = Zs[:]
 
 # generate n_test random points on the domain to check if the slope is
 # evaluated correctly
@@ -477,12 +482,13 @@ for flow in range(0,n_flows):
         sys.stdout.write("[%-20s] %d%% %s" % ('='*(last_percentage_5), last_percentage, est_rem_time))
         sys.stdout.flush()
 
-    # modify the slope
+    # modify the slope 
     if ( topo_mod_flag >= 1) and ( flows_counter == n_flows_counter ):
 
         flows_counter = 0
 
-        Ztot = Zs + filling_parameter * Zflow
+        # Ztot[:] = Ztot_temp[:]
+        np.copyto(Ztot_temp,Ztot)
         
     lobes_counter = 0
 
@@ -648,6 +654,10 @@ for flow in range(0,n_flows):
 
             Zflow[j_bottom:j_top,i_left:i_right] += lobe_thickness * Zflow_local
 
+            Ztot_temp[j_bottom:j_top,i_left:i_right] = Zs[j_bottom:j_top,i_left:i_right] + \
+                                                  filling_parameter * Zflow[j_bottom:j_top,i_left:i_right]
+
+            
             Zdist_local = Zflow_local_int * dist_int[i] + 9999 * ( Zflow_local == 0 )
 
             Zdist[j_bottom:j_top,i_left:i_right] = np.minimum( Zdist[j_bottom:j_top,i_left:i_right] \
@@ -770,11 +780,11 @@ for flow in range(0,n_flows):
         ix = ix.astype(int)
         iy = iy.astype(int)
 
-	ix = min(ix,nx-1)
-	iy = min(iy,ny-1)
+        ix = min(ix,nx-1)
+        iy = min(iy,ny-1)
 
-	ix1 = min(ix+1,nx-1)
-	iy1 = min(iy+1,ny-1)
+        ix1 = min(ix+1,nx-1)
+        iy1 = min(iy+1,ny-1)
 
         xi_fract = xi-ix
         yi_fract = yi-iy
@@ -889,11 +899,11 @@ for flow in range(0,n_flows):
         ix = ix.astype(int)
         iy = iy.astype(int)
 
-	ix = min(ix,nx-1)
-	iy = min(iy,ny-1)
+        ix = min(ix,nx-1)
+        iy = min(iy,ny-1)
 
-	ix1 = min(ix+1,nx-1)
-	iy1 = min(iy+1,ny-1)
+        ix1 = min(ix+1,nx-1)
+        iy1 = min(iy+1,ny-1)
 
         xi_fract = xi-ix
         yi_fract = yi-iy
@@ -1048,6 +1058,9 @@ for flow in range(0,n_flows):
             # update the thickness for the grid points selected
             Zflow[j_bottom:j_top,i_left:i_right] += lobe_thickness*Zflow_local
 
+            Ztot_temp[j_bottom:j_top,i_left:i_right] = Zs[j_bottom:j_top,i_left:i_right] + \
+                                                  filling_parameter * Zflow[j_bottom:j_top,i_left:i_right]
+            
             jtop_array[i] = j_top
             jbottom_array[i] = j_bottom
             
@@ -1084,7 +1097,8 @@ for flow in range(0,n_flows):
 
                     i_first_check = i + n_check_loop
 
-                    Ztot = Zs + filling_parameter * Zflow
+                    # Ztot[:] = Ztot_temp[:]
+                    np.copyto(Ztot_temp,Ztot)
 
 
             lobes_counter = lobes_counter + 1
@@ -1094,7 +1108,8 @@ for flow in range(0,n_flows):
 		    
             lobes_counter = 0
 
-            Ztot = Zs + filling_parameter * Zflow
+            # Ztot[:] = Ztot_temp[:]
+            np.copyto(Ztot_temp,Ztot)
 
 
     if ( hazard_flag ):
