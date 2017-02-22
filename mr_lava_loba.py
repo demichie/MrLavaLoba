@@ -102,6 +102,8 @@ print ("Mr Lava Loba by M.de' Michieli Vitturi and S.Tarquini")
 print ("")
 
 # read the run parameters form the file inpot_data.py
+
+from input_data_advanced import *
 from input_data import *
 
 filling_parameter = 1 - thickening_parameter
@@ -131,6 +133,7 @@ while condition:
 	
     run_name = base_name + '_{0:03}'.format(i) 
 
+    backup_advanced_file = run_name + '_advanced_inp.bak'
     backup_file = run_name + '_inp.bak'
 
     condition = os.path.isfile(backup_file)
@@ -138,6 +141,7 @@ while condition:
     i = i + 1
 
 # create a backup file of the input parameters
+shutil.copy2('input_data_advanced.py', backup_advanced_file)
 shutil.copy2('input_data.py', backup_file)
 
 print ('Run name',run_name)
