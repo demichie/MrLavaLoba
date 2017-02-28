@@ -792,7 +792,7 @@ for flow in range(0,n_flows):
         ix1 = min(ix+1,nx-1)
         iy1 = min(iy+1,ny-1)
 
-        if ( ix == 1 ) or ( ix == nx-1 ) or ( iy == 1 ) or ( iy == ny-1 ):
+        if ( ix <= 1 ) or ( ix1 >= nx-1 ) or ( iy <= 1 ) or ( iy1 >= ny-1 ):
 
             break
 
@@ -919,7 +919,7 @@ for flow in range(0,n_flows):
         xi_fract = xi-ix
         yi_fract = yi-iy
 
-        if ( ix == 1 ) or ( ix == nx-1 ) or ( iy == 1 ) or ( iy == ny-1 ):
+        if ( ix <= 1 ) or ( ix1 >= nx-1 ) or ( iy <= 1 ) or ( iy1 >= ny-1 ):
 
             break
         
