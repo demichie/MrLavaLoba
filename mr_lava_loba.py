@@ -114,10 +114,10 @@ cum_fiss_length = np.zeros(n_vents)
 
 for j in range(1,n_vents):
 
-    delta_x =  x_vent[j] - x_vent[j-1]
-    delta_y =  y_vent[j] - y_vent[j-1]
+    delta_xvent =  x_vent[j] - x_vent[j-1]
+    delta_yvent =  y_vent[j] - y_vent[j-1]
 
-    cum_fiss_length[j] = cum_fiss_length[j-1] + np.sqrt( delta_x**2 + delta_y**2 )
+    cum_fiss_length[j] = cum_fiss_length[j-1] + np.sqrt( delta_xvent**2 + delta_yvent**2 )
 
 if ( n_vents >1 ):
     cum_fiss_length = cum_fiss_length / cum_fiss_length[j]
@@ -792,6 +792,11 @@ for flow in range(0,n_flows):
         ix1 = min(ix+1,nx-1)
         iy1 = min(iy+1,ny-1)
 
+        if ( ix == 1 ) or ( ix == nx-1 ) or ( iy == 1 ) or ( iy == ny-1 ):
+
+            break
+
+        
         xi_fract = xi-ix
         yi_fract = yi-iy
 
@@ -826,7 +831,7 @@ for flow in range(0,n_flows):
                 rand = np.random.uniform(0, 1, size=1)
                 rand_angle_new = 360.0 * np.abs( rand-0.5 )
 
-            new_angle = max_slope_angle + rand_angle_new
+            new_angle = max_slope_angle + rand_angle_new[0]
 
         else:
 
@@ -857,7 +862,7 @@ for flow in range(0,n_flows):
         y_avg = ( 1.0 - alfa_inertial[i] ) * y_angle2 + alfa_inertial[i] * y_angle1
 
         angle_avg = np.mod(180 * np.arctan2(y_avg,x_avg) / pi , 360)   
-		   
+
         new_angle = angle_avg
 
         # STEP 4: DEFINE THE SEMI-AXIS OF THE NEW LOBE
@@ -914,7 +919,10 @@ for flow in range(0,n_flows):
         xi_fract = xi-ix
         yi_fract = yi-iy
 
+        if ( ix == 1 ) or ( ix == nx-1 ) or ( iy == 1 ) or ( iy == ny-1 ):
 
+            break
+        
         Fx_lobe = ( xi_fract*( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
                     + (1.0-xi_fract)*( Ztot[iy,ix1] - Ztot[iy,ix] ) ) / cell
 
