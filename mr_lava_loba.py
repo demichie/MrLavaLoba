@@ -241,31 +241,27 @@ hdr = [getline(source, i) for i in range(1,7)]
 values = [float(h.split(" ")[-1].strip()) \
  for h in hdr]
 cols,rows,lx,ly,cell,nd = values
-xres = cell
-yres = cell * -1
 
 # Load the dem into a numpy array
 arr = np.loadtxt(source, skiprows=6)
 
 nx = arr.shape[1]
-xs = lx -0.5*cell + np.linspace(0,(nx-1)*cell,nx)
+xs = lx + cell*(0.5+np.arange(0,nx))
 xmin = np.min(xs)
 xmax = np.max(xs)
 
+
 ny = arr.shape[0]
-ys = ly+cell*(ny+0.5) - np.linspace(0,(ny-1)*cell,ny)
+ys = ly + cell*(0.5+np.arange(0,ny))
 ymin = np.min(ys)
 ymax = np.max(ys)
 
-ys = np.linspace(ymin,ymax,ny)
+print xmin,ymin
 
-Zs = np.zeros((ny,nx))
 
 Xs,Ys = np.meshgrid(xs,ys)
 
-for i in range(0,ny):
-
-   Zs[i,0:nx-1] = arr[ny-i-1,0:nx-1]
+Zs = np.flipud(arr)
  
 
 for i_restart in range(0,len(restart_files)): 
@@ -277,11 +273,8 @@ for i_restart in range(0,len(restart_files)):
     # Load the previous flow thickness into a numpy array
     arr = np.loadtxt(source, skiprows=6)
 
-    for i in range(0,ny):
-
-        Zflow_old[i,0:nx-1] = arr[ny-i-1,0:nx-1]
-
-
+    Zflow_old = np.flipud(arr)
+    
     Zs = Zs + Zflow_old
 
 
@@ -1185,8 +1178,8 @@ if ( saveraster_flag == 1 ):
 
     header = "ncols     %s\n" % Zflow.shape[1]
     header += "nrows    %s\n" % Zflow.shape[0]
-    header += "xllcorner " + str(lx-cell) +"\n"
-    header += "yllcorner " + str(ly+cell) +"\n"
+    header += "xllcorner " + str(lx) +"\n"
+    header += "yllcorner " + str(ly) +"\n"
     header += "cellsize " + str(cell) +"\n"
     header += "NODATA_value 0\n"
 

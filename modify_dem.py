@@ -9,7 +9,7 @@ x_barrier = [ 436756,437334]
 y_barrier = [ 326238,326590]
 
 # these values define the width of the barrier at the vertexes
-dist = [ 50 ,50]
+dist = [ 20 ,20]
 
 # this parameter define the shape of the barrier:
 # n = 1 (triangle shape)
@@ -18,7 +18,7 @@ dist = [ 50 ,50]
 n = 1
 
 # ratio between height and width of the barrier
-hw_ratio = 0.2
+hw_ratio = 0.5
 
 
 
@@ -33,9 +33,6 @@ def p2LSbis(Q1,Q2,P):
     
     check12 = (x2-x1)*(x0-x1)+(y2-y1)*(y0-y1) >= 0
     check2 = (x2-x1)*(x0-x2)+(y2-y1)*(y0-y2) <= 0
-
-        
-
         
     # Distance of the grid point P from the segment joining Q1 and Q2
     d12 = np.abs((x2-x1)*(y0-y1)-(y2-y1)*(x0-x1))/np.sqrt((x2-x1)**2+(y2-y1)**2)
@@ -64,27 +61,25 @@ cols,rows,lx,ly,cell,nd = values
 arr = np.loadtxt(source_folder+source, skiprows=6)
 
 nx = arr.shape[1]
-xs = lx + cell*np.arange(0,nx)
+# x-centers of the cells
+xs = lx + cell*(0.5+np.arange(0,nx))
 xmin = np.min(xs)
 xmax = np.max(xs)
 
 ny = arr.shape[0]
-ys = ly + cell*np.arange(0,ny)
+# y-centers of the cells
+ys = ly + cell*(0.5+np.arange(0,ny))
 ymin = np.min(ys)
 ymax = np.max(ys)
 
-Zs = np.zeros((ny,nx))
-
+# grids of cell center locations
 Xs,Ys = np.meshgrid(xs,ys)
 
-for i in range(0,ny):
-
-   Zs[i,0:nx] = arr[i,0:nx]
-
+# topography (defined in the centers of the cells)
+Zs = np.flipud(arr)
    
 X_1d = Xs.ravel()
 Y_1d = Ys.ravel()
-
 
 P = np.stack((X_1d,Y_1d))
 
@@ -109,18 +104,18 @@ for i in range(0,len(x_barrier)-1):
     barrier_2d = np.maximum(barrier_2d,fiss_2d)
     
     
-Zmod = Zs + hw_ratio * np.flipud(barrier_2d)
+Zmod = Zs + hw_ratio * barrier_2d
 
 header = "ncols     %s\n" % Zs.shape[1]
 header += "nrows    %s\n" % Zs.shape[0]
-header += "xllcorner " + str(lx-cell) +"\n"
-header += "yllcorner " + str(ly+cell) +"\n"
+header += "xllcorner " + str(lx) +"\n"
+header += "yllcorner " + str(ly) +"\n"
 header += "cellsize " + str(cell) +"\n"
 header += "NODATA_value -9999\n"
 
 
 mod_file = source.strip('.asc')+'_mod.asc'
 
-np.savetxt(mod_file, Zmod, header=header, fmt='%1.5f',comments='')
+np.savetxt(mod_file, np.flipud(Zmod), header=header, fmt='%1.5f',comments='')
 
 
