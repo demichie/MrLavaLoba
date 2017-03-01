@@ -627,7 +627,7 @@ for flow in range(0,n_flows):
 
             # compute the points of the lobe
             [ xe , ye ] = ellipse( x[i] , y[i] , x1[i] , x2[i] , angle[i] , X_circle , Y_circle )
-
+            
             min_xe = np.min(xe)
             max_xe = np.max(xe)
         
@@ -639,6 +639,22 @@ for flow in range(0,n_flows):
             
             j_bottom = np.argmax(ys>min_ye)-1
             j_top = np.argmax(ys>max_ye)+1
+
+            #min_xe = x[i] - max_semiaxis
+            #max_xe = x[i] + max_semiaxis
+
+            #min_ye = y[i] - max_semiaxis
+            #max_ye = y[i] + max_semiaxis
+
+            #xi = (min_xe - xmin)/cell
+            #yi = (min_ye - ymin)/cell
+
+            #ix = np.floor(xi)
+            #iy = np.floor(yi)
+
+            #i_left = ix.astype(int)
+            #i_bottom = iy.astype(int)            
+            
         
             Xs_local = Xs[j_bottom:j_top,i_left:i_right]
             Ys_local = Ys[j_bottom:j_top,i_left:i_right]
@@ -779,25 +795,21 @@ for flow in range(0,n_flows):
         ix = ix.astype(int)
         iy = iy.astype(int)
 
-        ix = min(ix,nx-1)
-        iy = min(iy,ny-1)
-
-        ix1 = min(ix+1,nx-1)
-        iy1 = min(iy+1,ny-1)
+        ix1 = ix+1
+        iy1 = iy+1
 
         if ( ix <= 1 ) or ( ix1 >= nx-1 ) or ( iy <= 1 ) or ( iy1 >= ny-1 ):
 
             break
 
-        
         xi_fract = xi-ix
         yi_fract = yi-iy
 
-        Fx_lobe = ( xi_fract*( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
-                    + (1.0-xi_fract)*( Ztot[iy,ix1] - Ztot[iy,ix] ) ) / cell
+        Fx_lobe = ( xi_fract * ( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
+                    + (1.0-xi_fract) * ( Ztot[iy,ix1] - Ztot[iy,ix] ) ) / cell
 
-        Fy_lobe = ( yi_fract*( Ztot[iy1,ix1] - Ztot[iy,ix1] ) \
-                    + (1.0-yi_fract)*( Ztot[iy1,ix] - Ztot[iy,ix] ) ) / cell
+        Fy_lobe = ( yi_fract * ( Ztot[iy1,ix1] - Ztot[iy,ix1] ) \
+                    + (1.0-yi_fract) * ( Ztot[iy1,ix] - Ztot[iy,ix] ) ) / cell
 
         
         slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
@@ -835,12 +847,12 @@ for flow in range(0,n_flows):
         # STEP 3: ADD THE EFFECT OF INERTIA
 		   
         # cos and sin of the angle of the parent lobe
-        x_angle1 = np.cos(angle[idx]*deg2rad)
-        y_angle1 = np.sin(angle[idx]*deg2rad)
+        cos_angle1 = np.cos(angle[idx]*deg2rad)
+        sin_angle1 = np.sin(angle[idx]*deg2rad)
 
         # cos and sin of the angle of maximum slope
-        x_angle2 = np.cos(new_angle*deg2rad)
-        y_angle2 = np.sin(new_angle*deg2rad)
+        cos_angle2 = np.cos(new_angle*deg2rad)
+        sin_angle2 = np.sin(new_angle*deg2rad)
 
         if ( inertial_exponent == 0 ): 
 
@@ -851,8 +863,8 @@ for flow in range(0,n_flows):
             alfa_inertial[i] = ( 1.0 - (2.0 * np.arctan(slope) / np.pi)**inertial_exponent ) \
                                ** ( 1.0 / inertial_exponent )
 
-        x_avg = ( 1.0 - alfa_inertial[i] ) * x_angle2 + alfa_inertial[i] * x_angle1
-        y_avg = ( 1.0 - alfa_inertial[i] ) * y_angle2 + alfa_inertial[i] * y_angle1
+        x_avg = ( 1.0 - alfa_inertial[i] ) * cos_angle2 + alfa_inertial[i] * cos_angle1
+        y_avg = ( 1.0 - alfa_inertial[i] ) * sin_angle2 + alfa_inertial[i] * sin_angle1
 
         angle_avg = np.mod(180 * np.arctan2(y_avg,x_avg) / pi , 360)   
 
@@ -886,8 +898,9 @@ for flow in range(0,n_flows):
         # way we obtain the location in a coordiante-system centered in the
         # center of the existing lobe, but this time with the axes parallel to
         # the original x and y axes.
-        delta_x = xt * np.cos(deg2rad*angle[idx]) - yt * np.sin(deg2rad*angle[idx])
-        delta_y = xt * np.sin(deg2rad*angle[idx]) + yt * np.cos(deg2rad*angle[idx])
+
+        delta_x = xt * cos_angle1 - yt * sin_angle1
+        delta_y = xt * sin_angle1 + yt * cos_angle1
 		   
         # the slope coefficient is evaluated at the point of the boundary of the ellipse
         # definind by the direction of the new lobe
@@ -903,25 +916,21 @@ for flow in range(0,n_flows):
         ix = ix.astype(int)
         iy = iy.astype(int)
 
-        ix = min(ix,nx-1)
-        iy = min(iy,ny-1)
-
-        ix1 = min(ix+1,nx-1)
-        iy1 = min(iy+1,ny-1)
-
-        xi_fract = xi-ix
-        yi_fract = yi-iy
+        ix1 = ix+1
+        iy1 = iy+1
 
         if ( ix <= 1 ) or ( ix1 >= nx-1 ) or ( iy <= 1 ) or ( iy1 >= ny-1 ):
 
             break
+
+        xi_fract = xi-ix
+        yi_fract = yi-iy
         
         Fx_lobe = ( xi_fract*( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
                     + (1.0-xi_fract)*( Ztot[iy,ix1] - Ztot[iy,ix] ) ) / cell
 
         Fy_lobe = ( yi_fract*( Ztot[iy1,ix1] - Ztot[iy,ix1] ) \
                     + (1.0-yi_fract)*( Ztot[iy1,ix] - Ztot[iy,ix] ) ) / cell
-
 
         
         slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
@@ -1268,7 +1277,8 @@ if ( saveraster_flag == 1 ):
 
             total_Zflow = np.sum(Zflow)
 
-            for i in range(1,max_Zhazard):
+            # for i in range(1,max_Zhazard):
+            for i in np.unique(Zhazard):
 
                 masked_Zflow = ma.masked_where(Zhazard < i, Zflow)
 
