@@ -1199,6 +1199,9 @@ if ( saveraster_flag == 1 ):
     print ('')
     print (output_full + ' saved')
 
+    nonzero_full = np.count_nonzero(Zflow)
+    print ('Full flow: maximum value = ' + str(np.amax(Zflow)) + ' average value = ' + str(np.sum(Zflow)/nonzero_full) )
+
     if ( masking_threshold < 1):
 
         max_lobes = np.int(np.floor(np.max(Zflow/avg_lobe_thickness)))
@@ -1229,9 +1232,9 @@ if ( saveraster_flag == 1 ):
                 if ( flag_threshold == 1 ):
                 
                     print('')
-                    print ('Total volume',cell**2*total_Zflow, \
-                           ' Masked volume',cell**2*np.sum( masked_Zflow ), \
-                           ' Volume fraction',coverage_fraction)
+                    print ('Total volume' + str(cell**2*total_Zflow) \
+                           + ' Masked volume' + str(cell**2*np.sum( masked_Zflow ) ) \
+                           + ' Volume fraction' + str(coverage_fraction) )
 
 
                 output_masked = run_name + '_thickness_masked.asc'
@@ -1242,6 +1245,13 @@ if ( saveraster_flag == 1 ):
                 print ('')
                 print (output_masked + ' saved')
 
+
+                Zflow_masked = (1-masked_Zflow.mask)*Zflow
+
+                nonzero_masked = np.count_nonzero(Zflow_masked)
+                print ('Masked flow: maximum value = '+str(np.amax(Zflow_masked)) \
+                           +' average value = '+str(np.sum(Zflow_masked)/nonzero_masked))
+                
                 break
 
     output_dist = run_name + '_dist_full.asc'
