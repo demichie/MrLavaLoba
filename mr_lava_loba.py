@@ -102,6 +102,8 @@ print ("Mr Lava Loba by M.de' Michieli Vitturi and S.Tarquini")
 print ("")
 
 # read the run parameters form the file inpot_data.py
+
+from input_data_advanced import *
 from input_data import *
 
 filling_parameter = 1 - thickening_parameter
@@ -112,10 +114,10 @@ cum_fiss_length = np.zeros(n_vents)
 
 for j in range(1,n_vents):
 
-    delta_x =  x_vent[j] - x_vent[j-1]
-    delta_y =  y_vent[j] - y_vent[j-1]
+    delta_xvent =  x_vent[j] - x_vent[j-1]
+    delta_yvent =  y_vent[j] - y_vent[j-1]
 
-    cum_fiss_length[j] = cum_fiss_length[j-1] + np.sqrt( delta_x**2 + delta_y**2 )
+    cum_fiss_length[j] = cum_fiss_length[j-1] + np.sqrt( delta_xvent**2 + delta_yvent**2 )
 
 if ( n_vents >1 ):
     cum_fiss_length = cum_fiss_length / cum_fiss_length[j]
@@ -131,6 +133,7 @@ while condition:
 	
     run_name = base_name + '_{0:03}'.format(i) 
 
+    backup_advanced_file = run_name + '_advanced_inp.bak'
     backup_file = run_name + '_inp.bak'
 
     condition = os.path.isfile(backup_file)
@@ -138,6 +141,7 @@ while condition:
     i = i + 1
 
 # create a backup file of the input parameters
+shutil.copy2('input_data_advanced.py', backup_advanced_file)
 shutil.copy2('input_data.py', backup_file)
 
 print ('Run name',run_name)
@@ -237,31 +241,27 @@ hdr = [getline(source, i) for i in range(1,7)]
 values = [float(h.split(" ")[-1].strip()) \
  for h in hdr]
 cols,rows,lx,ly,cell,nd = values
-xres = cell
-yres = cell * -1
 
 # Load the dem into a numpy array
 arr = np.loadtxt(source, skiprows=6)
 
 nx = arr.shape[1]
-xs = lx -0.5*cell + np.linspace(0,(nx-1)*cell,nx)
+xs = lx + cell*(0.5+np.arange(0,nx))
 xmin = np.min(xs)
 xmax = np.max(xs)
 
+
 ny = arr.shape[0]
-ys = ly+cell*(ny+0.5) - np.linspace(0,(ny-1)*cell,ny)
+ys = ly + cell*(0.5+np.arange(0,ny))
 ymin = np.min(ys)
 ymax = np.max(ys)
 
-ys = np.linspace(ymin,ymax,ny)
+print xmin,ymin
 
-Zs = np.zeros((ny,nx))
 
 Xs,Ys = np.meshgrid(xs,ys)
 
-for i in range(0,ny):
-
-   Zs[i,0:nx-1] = arr[ny-i-1,0:nx-1]
+Zs = np.flipud(arr)
  
 
 for i_restart in range(0,len(restart_files)): 
@@ -273,11 +273,8 @@ for i_restart in range(0,len(restart_files)):
     # Load the previous flow thickness into a numpy array
     arr = np.loadtxt(source, skiprows=6)
 
-    for i in range(0,ny):
-
-        Zflow_old[i,0:nx-1] = arr[ny-i-1,0:nx-1]
-
-
+    Zflow_old = np.flipud(arr)
+    
     Zs = Zs + Zflow_old
 
 
@@ -299,7 +296,14 @@ if ( plot_lobes_flag ) or ( plot_flow_flag):
 
     plt.savefig('fig_map.png')
 
-Ztot = Zs
+
+Ztot = np.zeros((ny,nx))
+Ztot_temp = np.zeros((ny,nx))
+
+np.copyto(Ztot,Zs)
+np.copyto(Ztot_temp,Zs)
+#Ztot[:] = Zs[:]
+#Ztot_temp[:] = Zs[:]
 
 # generate n_test random points on the domain to check if the slope is
 # evaluated correctly
@@ -477,12 +481,13 @@ for flow in range(0,n_flows):
         sys.stdout.write("[%-20s] %d%% %s" % ('='*(last_percentage_5), last_percentage, est_rem_time))
         sys.stdout.flush()
 
-    # modify the slope
+    # modify the slope 
     if ( topo_mod_flag >= 1) and ( flows_counter == n_flows_counter ):
 
         flows_counter = 0
 
-        Ztot = Zs + filling_parameter * Zflow
+        # Ztot[:] = Ztot_temp[:]
+        np.copyto(Ztot,Ztot_temp)
         
     lobes_counter = 0
 
@@ -622,7 +627,7 @@ for flow in range(0,n_flows):
 
             # compute the points of the lobe
             [ xe , ye ] = ellipse( x[i] , y[i] , x1[i] , x2[i] , angle[i] , X_circle , Y_circle )
-
+            
             min_xe = np.min(xe)
             max_xe = np.max(xe)
         
@@ -634,6 +639,22 @@ for flow in range(0,n_flows):
             
             j_bottom = np.argmax(ys>min_ye)-1
             j_top = np.argmax(ys>max_ye)+1
+
+            #min_xe = x[i] - max_semiaxis
+            #max_xe = x[i] + max_semiaxis
+
+            #min_ye = y[i] - max_semiaxis
+            #max_ye = y[i] + max_semiaxis
+
+            #xi = (min_xe - xmin)/cell
+            #yi = (min_ye - ymin)/cell
+
+            #ix = np.floor(xi)
+            #iy = np.floor(yi)
+
+            #i_left = ix.astype(int)
+            #i_bottom = iy.astype(int)            
+            
         
             Xs_local = Xs[j_bottom:j_top,i_left:i_right]
             Ys_local = Ys[j_bottom:j_top,i_left:i_right]
@@ -648,6 +669,10 @@ for flow in range(0,n_flows):
 
             Zflow[j_bottom:j_top,i_left:i_right] += lobe_thickness * Zflow_local
 
+            Ztot_temp[j_bottom:j_top,i_left:i_right] = Zs[j_bottom:j_top,i_left:i_right] + \
+                                                  filling_parameter * Zflow[j_bottom:j_top,i_left:i_right]
+
+            
             Zdist_local = Zflow_local_int * dist_int[i] + 9999 * ( Zflow_local == 0 )
 
             Zdist[j_bottom:j_top,i_left:i_right] = np.minimum( Zdist[j_bottom:j_top,i_left:i_right] \
@@ -770,20 +795,21 @@ for flow in range(0,n_flows):
         ix = ix.astype(int)
         iy = iy.astype(int)
 
-	ix = min(ix,nx-1)
-	iy = min(iy,ny-1)
+        ix1 = ix+1
+        iy1 = iy+1
 
-	ix1 = min(ix+1,nx-1)
-	iy1 = min(iy+1,ny-1)
+        if ( ix <= 1 ) or ( ix1 >= nx-1 ) or ( iy <= 1 ) or ( iy1 >= ny-1 ):
+
+            break
 
         xi_fract = xi-ix
         yi_fract = yi-iy
 
-        Fx_lobe = ( xi_fract*( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
-                    + (1.0-xi_fract)*( Ztot[iy,ix1] - Ztot[iy,ix] ) ) / cell
+        Fx_lobe = ( xi_fract * ( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
+                    + (1.0-xi_fract) * ( Ztot[iy,ix1] - Ztot[iy,ix] ) ) / cell
 
-        Fy_lobe = ( yi_fract*( Ztot[iy1,ix1] - Ztot[iy,ix1] ) \
-                    + (1.0-yi_fract)*( Ztot[iy1,ix] - Ztot[iy,ix] ) ) / cell
+        Fy_lobe = ( yi_fract * ( Ztot[iy1,ix1] - Ztot[iy,ix1] ) \
+                    + (1.0-yi_fract) * ( Ztot[iy1,ix] - Ztot[iy,ix] ) ) / cell
 
         
         slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
@@ -810,7 +836,7 @@ for flow in range(0,n_flows):
                 rand = np.random.uniform(0, 1, size=1)
                 rand_angle_new = 360.0 * np.abs( rand-0.5 )
 
-            new_angle = max_slope_angle + rand_angle_new
+            new_angle = max_slope_angle + rand_angle_new[0]
 
         else:
 
@@ -821,12 +847,12 @@ for flow in range(0,n_flows):
         # STEP 3: ADD THE EFFECT OF INERTIA
 		   
         # cos and sin of the angle of the parent lobe
-        x_angle1 = np.cos(angle[idx]*deg2rad)
-        y_angle1 = np.sin(angle[idx]*deg2rad)
+        cos_angle1 = np.cos(angle[idx]*deg2rad)
+        sin_angle1 = np.sin(angle[idx]*deg2rad)
 
         # cos and sin of the angle of maximum slope
-        x_angle2 = np.cos(new_angle*deg2rad)
-        y_angle2 = np.sin(new_angle*deg2rad)
+        cos_angle2 = np.cos(new_angle*deg2rad)
+        sin_angle2 = np.sin(new_angle*deg2rad)
 
         if ( inertial_exponent == 0 ): 
 
@@ -837,11 +863,11 @@ for flow in range(0,n_flows):
             alfa_inertial[i] = ( 1.0 - (2.0 * np.arctan(slope) / np.pi)**inertial_exponent ) \
                                ** ( 1.0 / inertial_exponent )
 
-        x_avg = ( 1.0 - alfa_inertial[i] ) * x_angle2 + alfa_inertial[i] * x_angle1
-        y_avg = ( 1.0 - alfa_inertial[i] ) * y_angle2 + alfa_inertial[i] * y_angle1
+        x_avg = ( 1.0 - alfa_inertial[i] ) * cos_angle2 + alfa_inertial[i] * cos_angle1
+        y_avg = ( 1.0 - alfa_inertial[i] ) * sin_angle2 + alfa_inertial[i] * sin_angle1
 
         angle_avg = np.mod(180 * np.arctan2(y_avg,x_avg) / pi , 360)   
-		   
+
         new_angle = angle_avg
 
         # STEP 4: DEFINE THE SEMI-AXIS OF THE NEW LOBE
@@ -872,8 +898,9 @@ for flow in range(0,n_flows):
         # way we obtain the location in a coordiante-system centered in the
         # center of the existing lobe, but this time with the axes parallel to
         # the original x and y axes.
-        delta_x = xt * np.cos(deg2rad*angle[idx]) - yt * np.sin(deg2rad*angle[idx])
-        delta_y = xt * np.sin(deg2rad*angle[idx]) + yt * np.cos(deg2rad*angle[idx])
+
+        delta_x = xt * cos_angle1 - yt * sin_angle1
+        delta_y = xt * sin_angle1 + yt * cos_angle1
 		   
         # the slope coefficient is evaluated at the point of the boundary of the ellipse
         # definind by the direction of the new lobe
@@ -889,22 +916,21 @@ for flow in range(0,n_flows):
         ix = ix.astype(int)
         iy = iy.astype(int)
 
-	ix = min(ix,nx-1)
-	iy = min(iy,ny-1)
+        ix1 = ix+1
+        iy1 = iy+1
 
-	ix1 = min(ix+1,nx-1)
-	iy1 = min(iy+1,ny-1)
+        if ( ix <= 1 ) or ( ix1 >= nx-1 ) or ( iy <= 1 ) or ( iy1 >= ny-1 ):
+
+            break
 
         xi_fract = xi-ix
         yi_fract = yi-iy
-
-
+        
         Fx_lobe = ( xi_fract*( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
                     + (1.0-xi_fract)*( Ztot[iy,ix1] - Ztot[iy,ix] ) ) / cell
 
         Fy_lobe = ( yi_fract*( Ztot[iy1,ix1] - Ztot[iy,ix1] ) \
                     + (1.0-yi_fract)*( Ztot[iy1,ix] - Ztot[iy,ix] ) ) / cell
-
 
         
         slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
@@ -1048,6 +1074,9 @@ for flow in range(0,n_flows):
             # update the thickness for the grid points selected
             Zflow[j_bottom:j_top,i_left:i_right] += lobe_thickness*Zflow_local
 
+            Ztot_temp[j_bottom:j_top,i_left:i_right] = Zs[j_bottom:j_top,i_left:i_right] + \
+                                                  filling_parameter * Zflow[j_bottom:j_top,i_left:i_right]
+            
             jtop_array[i] = j_top
             jbottom_array[i] = j_bottom
             
@@ -1084,7 +1113,8 @@ for flow in range(0,n_flows):
 
                     i_first_check = i + n_check_loop
 
-                    Ztot = Zs + filling_parameter * Zflow
+                    # Ztot[:] = Ztot_temp[:]
+                    np.copyto(Ztot,Ztot_temp)
 
 
             lobes_counter = lobes_counter + 1
@@ -1094,7 +1124,8 @@ for flow in range(0,n_flows):
 		    
             lobes_counter = 0
 
-            Ztot = Zs + filling_parameter * Zflow
+            # Ztot[:] = Ztot_temp[:]
+            np.copyto(Ztot,Ztot_temp)
 
 
     if ( hazard_flag ):
@@ -1143,6 +1174,8 @@ print ('Time elapsed ' + str(elapsed) + ' sec.')
 print ('')
 print ('Saving files')
 
+# print ('Max thickness',np.max(Ztot-Zs),' m')
+
 if ( saveshape_flag ):
 
     # Save the shapefile
@@ -1154,8 +1187,8 @@ if ( saveraster_flag == 1 ):
 
     header = "ncols     %s\n" % Zflow.shape[1]
     header += "nrows    %s\n" % Zflow.shape[0]
-    header += "xllcorner " + str(lx-cell) +"\n"
-    header += "yllcorner " + str(ly+cell) +"\n"
+    header += "xllcorner " + str(lx) +"\n"
+    header += "yllcorner " + str(ly) +"\n"
     header += "cellsize " + str(cell) +"\n"
     header += "NODATA_value 0\n"
 
@@ -1165,6 +1198,9 @@ if ( saveraster_flag == 1 ):
 
     print ('')
     print (output_full + ' saved')
+
+    nonzero_full = np.count_nonzero(Zflow)
+    print ('Full flow: maximum value = ' + str(np.amax(Zflow)) + ' average value = ' + str(np.sum(Zflow)/nonzero_full) )
 
     if ( masking_threshold < 1):
 
@@ -1196,9 +1232,9 @@ if ( saveraster_flag == 1 ):
                 if ( flag_threshold == 1 ):
                 
                     print('')
-                    print ('Total volume',cell**2*total_Zflow, \
-                           ' Masked volume',cell**2*np.sum( masked_Zflow ), \
-                           ' Volume fraction',coverage_fraction)
+                    print ('Total volume' + str(cell**2*total_Zflow) \
+                           + ' Masked volume' + str(cell**2*np.sum( masked_Zflow ) ) \
+                           + ' Volume fraction' + str(coverage_fraction) )
 
 
                 output_masked = run_name + '_thickness_masked.asc'
@@ -1209,6 +1245,13 @@ if ( saveraster_flag == 1 ):
                 print ('')
                 print (output_masked + ' saved')
 
+
+                Zflow_masked = (1-masked_Zflow.mask)*Zflow
+
+                nonzero_masked = np.count_nonzero(Zflow_masked)
+                print ('Masked flow: maximum value = '+str(np.amax(Zflow_masked)) \
+                           +' average value = '+str(np.sum(Zflow_masked)/nonzero_masked))
+                
                 break
 
     output_dist = run_name + '_dist_full.asc'
@@ -1244,7 +1287,8 @@ if ( saveraster_flag == 1 ):
 
             total_Zflow = np.sum(Zflow)
 
-            for i in range(1,max_Zhazard):
+            # for i in range(1,max_Zhazard):
+            for i in np.unique(Zhazard):
 
                 masked_Zflow = ma.masked_where(Zhazard < i, Zflow)
 
