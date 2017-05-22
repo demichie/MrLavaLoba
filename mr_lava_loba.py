@@ -256,7 +256,7 @@ ys = ly + cell*(0.5+np.arange(0,ny))
 ymin = np.min(ys)
 ymax = np.max(ys)
 
-print xmin,ymin
+print (xmin,ymin)
 
 
 Xs,Ys = np.meshgrid(xs,ys)
@@ -394,7 +394,7 @@ points = np.zeros((nxy, 2))
 Zflow = np.zeros((ny,nx))
 
 max_semiaxis = np.sqrt( lobe_area * max_aspect_ratio / np.pi )
-max_cells = np.ceil( 2.0 * max_semiaxis / cell ) + 2
+max_cells = np.ceil( 2.0 * max_semiaxis / cell ) + 4
 max_cells = max_cells.astype(int)
 
 print ('max_semiaxis',max_semiaxis)
@@ -407,6 +407,7 @@ ileft_array =np.zeros(alloc_n_lobes, dtype=np.int)
 
 
 Zhazard = np.zeros((ny,nx))
+Zhazard_temp = np.zeros((ny,nx))
 
 Zdist = Zflow + 9999
  
@@ -440,7 +441,7 @@ n_lobes_tot = 0
 
 for flow in range(0,n_flows):
 
-    Zflow_local_array = np.zeros((alloc_n_lobes,max_cells,max_cells))
+    Zflow_local_array = np.zeros((alloc_n_lobes,max_cells,max_cells),dtype=np.int)
     descendents = np.zeros(alloc_n_lobes, dtype=np.int)
 
     i_first_check = n_check_loop
@@ -634,11 +635,11 @@ for flow in range(0,n_flows):
             min_ye = np.min(ye)
             max_ye = np.max(ye)
 
-            i_left = np.argmax(xs>min_xe)-1
-            i_right = np.argmax(xs>max_xe)+1
+            i_left = np.argmax(xs>min_xe)-2
+            i_right = np.argmax(xs>max_xe)+2
             
-            j_bottom = np.argmax(ys>min_ye)-1
-            j_top = np.argmax(ys>max_ye)+1
+            j_bottom = np.argmax(ys>min_ye)-2
+            j_top = np.argmax(ys>max_ye)+2
 
             #min_xe = x[i] - max_semiaxis
             #max_xe = x[i] + max_semiaxis
@@ -664,6 +665,7 @@ for flow in range(0,n_flows):
             Zflow_local = area_fract
             Zflow_local_int = np.ceil(area_fract)
             Zflow_local_int = Zflow_local_int.astype(int)
+
          
             lobe_thickness = thickness_min + ( i-1 ) * delta_lobe_thickness
 
@@ -687,7 +689,6 @@ for flow in range(0,n_flows):
             if ( hazard_flag ):
 
                 # store the local array 
-
                 Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left] = Zflow_local_int
                 
                
@@ -1012,7 +1013,7 @@ for flow in range(0,n_flows):
 
             else:
                     
-                i_left = np.argmax(xs>min_xe)-1
+                i_left = np.argmax(xs>min_xe)-2
 
 
             if ( max_xe < xs[0] ):
@@ -1025,7 +1026,7 @@ for flow in range(0,n_flows):
 
             else:
                 
-                i_right = np.argmax(xs>max_xe)+1
+                i_right = np.argmax(xs>max_xe)+2
 
 
             if ( min_ye < ys[0] ):
@@ -1038,7 +1039,7 @@ for flow in range(0,n_flows):
 
             else:
                     
-                j_bottom = np.argmax(ys>min_ye)-1
+                j_bottom = np.argmax(ys>min_ye)-2
 
             if ( max_ye < ys[0] ):
 
@@ -1050,7 +1051,7 @@ for flow in range(0,n_flows):
 
             else:
 
-                j_top = np.argmax(ys>max_ye)+1
+                j_top = np.argmax(ys>max_ye)+2
 
             Xs_local = Xs[j_bottom:j_top,i_left:i_right]
             Ys_local = Ys[j_bottom:j_top,i_left:i_right]
@@ -1132,6 +1133,7 @@ for flow in range(0,n_flows):
 
         # update the hazard map accuunting for the number of descendents, representative
         # of the number of times a flow has passed over a cell
+
         for i in range(0,n_lobes):
 
             j_top = jtop_array[i]
@@ -1140,9 +1142,89 @@ for flow in range(0,n_flows):
             i_right = iright_array[i]
             i_left = ileft_array[i]
 
-            Zhazard[j_bottom:j_top,i_left:i_right] += descendents[i] \
-                                                   * Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left]
+            if ( i > 0):
+                
+                #print('idx',i)  
+                #print('idx parent',parent[i])  
+                #print('j',jbottom_array[parent[i]],jtop_array[parent[i]])
+                #print('i',ileft_array[parent[i]],iright_array[parent[i]])
 
+                #print(Zflow_local_array[parent[i],0:jtop_array[parent[i]]-jbottom_array[parent[i]], \
+                #                        0:iright_array[parent[i]]-ileft_array[parent[i]]])
+
+
+                #print('j',j_bottom,j_top)
+                #print('i',i_left,i_right)
+
+                #print(Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left])
+
+
+                j_top_int = np.minimum( j_top , jtop_array[parent[i]] )
+                j_bottom_int = np.maximum( j_bottom , jbottom_array[parent[i]] )
+                i_left_int = np.maximum( i_left , ileft_array[parent[i]] )
+                i_right_int = np.minimum( i_right , iright_array[parent[i]] )
+                      
+                #print(j_bottom_int,j_top_int,i_left_int,i_right_int)
+
+                #print(np.maximum(0,j_bottom_int-j_bottom), \
+                #      np.minimum(j_top_int-j_bottom,j_top-j_bottom),   \
+                #      np.maximum(i_left_int-i_left,0) ,   \
+                #      np.minimum(i_right_int-i_left,i_right-i_left) )
+
+                #print(np.maximum(0,j_bottom_int-jbottom_array[parent[i]]), \
+                #      np.minimum(j_top_int-jbottom_array[parent[i]],jtop_array[parent[i]]-jbottom_array[parent[i]]),   \
+                #      np.maximum(i_left_int-ileft_array[parent[i]],0) ,   \
+                #      np.minimum(i_right_int-ileft_array[parent[i]],iright_array[parent[i]]-ileft_array[parent[i]]) )
+
+                #print(Zflow_local_array[parent[i],np.maximum(0,j_bottom_int-jbottom_array[parent[i]]): \
+                #      np.minimum(j_top_int-jbottom_array[parent[i]],jtop_array[parent[i]]-jbottom_array[parent[i]]),   \
+                #      np.maximum(i_left_int-ileft_array[parent[i]],0):   \
+                #      np.minimum(i_right_int-ileft_array[parent[i]],iright_array[parent[i]]-ileft_array[parent[i]])] )
+
+                #print(Zflow_local_array[i,np.maximum(0,j_bottom_int-j_bottom): \
+                #      np.minimum(j_top_int-j_bottom,j_top-j_bottom),   \
+                #      np.maximum(i_left_int-i_left,0):   \
+                #      np.minimum(i_right_int-i_left,i_right-i_left)] )
+
+                #print(Zflow_local_array[i,np.maximum(0,j_bottom_int-j_bottom): \
+                #      np.minimum(j_top_int-j_bottom,j_top-j_bottom),   \
+                #      np.maximum(i_left_int-i_left,0):   \
+                #      np.minimum(i_right_int-i_left,i_right-i_left)] * \
+                #      ( 1 - Zflow_local_array[parent[i],np.maximum(0,j_bottom_int-jbottom_array[parent[i]]): \
+                #      np.minimum(j_top_int-jbottom_array[parent[i]],jtop_array[parent[i]]-jbottom_array[parent[i]]),   \
+                #      np.maximum(i_left_int-ileft_array[parent[i]],0):   \
+                #      np.minimum(i_right_int-ileft_array[parent[i]],iright_array[parent[i]]-ileft_array[parent[i]])] ))
+
+
+                Zlocal_new = np.zeros((max_cells,max_cells),dtype=np.int)
+                Zlocal_parent = np.zeros((max_cells,max_cells),dtype=np.int)
+
+
+                Zlocal_parent = Zflow_local_array[parent[i],np.maximum(0,j_bottom_int-jbottom_array[parent[i]]): \
+                      np.minimum(j_top_int-jbottom_array[parent[i]],jtop_array[parent[i]]-jbottom_array[parent[i]]),   \
+                      np.maximum(i_left_int-ileft_array[parent[i]],0):   \
+                      np.minimum(i_right_int-ileft_array[parent[i]],iright_array[parent[i]]-ileft_array[parent[i]])]
+
+
+                Zlocal_new = Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left]
+
+                Zlocal_new[np.maximum(0,j_bottom_int-j_bottom): \
+                      np.minimum(j_top_int-j_bottom,j_top-j_bottom),   \
+                      np.maximum(i_left_int-i_left,0):   \
+                      np.minimum(i_right_int-i_left,i_right-i_left)] *= ( 1 - Zlocal_parent )
+
+                #print('Zlocal_new\n')
+                #print(Zlocal_new)                
+
+                #time.sleep(5.5)
+
+                Zhazard[j_bottom:j_top,i_left:i_right] += descendents[i] \
+                                                        * Zlocal_new[0:j_top-j_bottom,0:i_right-i_left]
+
+            else:
+
+                Zhazard[j_bottom:j_top,i_left:i_right] += descendents[i] \
+                                                        * Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left]
         
     # plot the patches for the lobes
     # p = PatchCollection(patch, facecolor = 'r',edgecolor='none',alpha=0.05)
@@ -1199,9 +1281,6 @@ if ( saveraster_flag == 1 ):
     print ('')
     print (output_full + ' saved')
 
-    nonzero_full = np.count_nonzero(Zflow)
-    print ('Full flow: maximum value = ' + str(np.amax(Zflow)) + ' average value = ' + str(np.sum(Zflow)/nonzero_full) )
-
     if ( masking_threshold < 1):
 
         max_lobes = np.int(np.floor(np.max(Zflow/avg_lobe_thickness)))
@@ -1232,9 +1311,9 @@ if ( saveraster_flag == 1 ):
                 if ( flag_threshold == 1 ):
                 
                     print('')
-                    print ('Total volume' + str(cell**2*total_Zflow) \
-                           + ' Masked volume' + str(cell**2*np.sum( masked_Zflow ) ) \
-                           + ' Volume fraction' + str(coverage_fraction) )
+                    print ('Total volume',cell**2*total_Zflow, \
+                           ' Masked volume',cell**2*np.sum( masked_Zflow ), \
+                           ' Volume fraction',coverage_fraction)
 
 
                 output_masked = run_name + '_thickness_masked.asc'
@@ -1245,13 +1324,6 @@ if ( saveraster_flag == 1 ):
                 print ('')
                 print (output_masked + ' saved')
 
-
-                Zflow_masked = (1-masked_Zflow.mask)*Zflow
-
-                nonzero_masked = np.count_nonzero(Zflow_masked)
-                print ('Masked flow: maximum value = '+str(np.amax(Zflow_masked)) \
-                           +' average value = '+str(np.sum(Zflow_masked)/nonzero_masked))
-                
                 break
 
     output_dist = run_name + '_dist_full.asc'
