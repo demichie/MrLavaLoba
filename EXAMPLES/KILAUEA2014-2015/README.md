@@ -1,4 +1,4 @@
-## Kilauea 2014-2015 pahoehoe flow field
+# Kilauea 2014-2015 pahoehoe flow field
 
 This folder contains the files to simulate the pahoehoe flow field which formed at Kilauea volcano (Hawaii) between June 27, 2014 and June 8, 2015 (Patrick et al. 2016). 
 
@@ -9,7 +9,7 @@ Given the complexity of the whole episode, and the peculiar presence of the grou
 This simulation has been supported by USGS colleagues based at the Hawaiian observatory, which provided the digital elevation model (the 20-resolution NED topography, Gesch et al., 2002) and lava coverage in addition to input settings such as an estimation of the volume of lava flowed through the computational vent considered.
 
 
-# References
+### References
 
 Patrick, Matthew, et al. "Thermal mapping of a pāhoehoe lava flow, Kīlauea Volcano." Journal of Volcanology and Geothermal Research 332 (2017): 71-87.
 
