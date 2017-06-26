@@ -1,4 +1,4 @@
-##Kilauea 2014-2015 pahoehoe flow field
+## Kilauea 2014-2015 pahoehoe flow field
 
 This folder contains the files to simulate the pahoehoe flow field which formed at Kilauea volcano (Hawaii) between June 27, 2014 and June 8, 2015 (Patrick et al. 2016). 
 
