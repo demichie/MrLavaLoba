@@ -21,8 +21,8 @@ source = "test20m.asc"
 vent_flag = 0
 
 # Hawaii_preliminary_input from Matthew
-x_vent = [ 290742]
-y_vent = [ 2151360]
+x_vent = [ 288830 ]
+y_vent = [ 2150362 ]
 
 # If this flag is set to 1 then a raster map is saved where the values
 # represent the probability of a cell to be covered. 
@@ -38,13 +38,13 @@ hazard_flag = 0
 masking_threshold = 0.97
 
 # Number of flows
-n_flows = 25
+n_flows = 1024
 
 # Minimum number of lobes generated for each flow
-min_n_lobes = 2500
+min_n_lobes = 5000
 
 # Maximum number of lobes generated for each flow
-max_n_lobes = 2500
+max_n_lobes = 5000
 
 # If volume flag = 1 then the total volume is read in input, and the
 # thickness or the area of the lobes are evaluated according to the
@@ -62,7 +62,7 @@ total_volume = 18000000  # m^3
 fixed_dimension_flag = 1
 
 # Area of each lobe ( only effective when volume_flag = 0 or fixed_dimension_flag = 1 )
-lobe_area = 1000   # m^2
+lobe_area = 2000   # m^2
 
 # Thickness of each lobe ( only effective when volume_flag = 0 or fixed_dimension_flag  2 )
 # avg_lobe_thickness = 0.02   # m
@@ -72,7 +72,7 @@ lobe_area = 1000   # m^2
 # thickness_ratio < 1   => the thickness increases with lobe "age"
 # thickness_ratio = 1   => all the lobes have the same thickness
 # thickness_ratio > 1   => the thickness decreases with lobe "age"
-thickness_ratio = 1
+thickness_ratio = 0.038
 
 # This flag controls if the topography is modified by the lobes and if the
 # emplacement of new flows is affected by the changed slope
@@ -88,7 +88,7 @@ n_flows_counter = 1
 
 # This parameter is only effective when topo_mod_flag = 2 and defines the
 # number of lobes for the re-evaluation of the slope modified by the flow
-n_lobes_counter = 500
+n_lobes_counter = 1000
 
 # This parameter (between 0 and 1) allows for a thickening of the flow giving
 # controlling the modification of the slope due to the presence of the flow.
@@ -106,7 +106,7 @@ thickening_parameter = 0.2
 #			of the next lobe from which a new lobe will be 
 #			generated. 
 # lobe_exponent = 0  => the new lobe is generated from the last one.
-lobe_exponent = 0.015
+lobe_exponent = 0.01
 
 # max_slope_prob is related to the porbability that the direction of 
 # the new lobe is close to the maximum slope direction:
@@ -116,7 +116,7 @@ lobe_exponent = 0.015
 #			value of the parameter;
 # max_slope_prob = 1 => the direction of the new lobe is the maximum
 #			slope direction.
-max_slope_prob = 0.8
+max_slope_prob = 0.5
 
 # Inertial exponent: 
 # inertial_exponent = 0 => the max probability direction for the new lobe is the
