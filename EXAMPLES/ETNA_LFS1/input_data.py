@@ -44,7 +44,7 @@ n_flows = 1024
 min_n_lobes = 207
 
 # Maximum number of lobes generated for each flow
-max_n_lobes = 207
+max_n_lobes = min_n_lobes
 
 # If volume flag = 1 then the total volume is read in input, and the
 # thickness or the area of the lobes are evaluated according to the
@@ -62,10 +62,10 @@ total_volume = 30000000  # m^3
 fixed_dimension_flag = 1
 
 # Area of each lobe ( only effective when volume_flag = 0 or fixed_dimension_flag = 1 )
-lobe_area = 1000   # m^2
+lobe_area = 1000   # m^2 
 
 # Thickness of each lobe ( only effective when volume_flag = 0 or fixed_dimension_flag  2 )
-# avg_lobe_thickness = 0.02   # m
+# avg_lobe_thickness = 0.07  # m
 
 # Ratio between the thickness of the first lobe of the flow and the thickness of the
 # last lobe.
@@ -94,6 +94,10 @@ n_lobes_counter = 500
 # controlling the modification of the slope due to the presence of the flow.
 # thickening_parameter = 0  => minimum thickening (maximum spreading)
 # thickening_parameter = 1  => maximum thickening produced in the output
+# default thickening_parameter = 0.2
+# if you reduce this, the impact of the lava flow is lessened in the computation of the slope, 
+# but the thickness is still correct. this allows for "channel" flow, if = 1, 
+# then sublava flow would not happen. 
 thickening_parameter = 0.8533333
 
 # Lobe_exponent is associated to the probability that a new lobe will
@@ -108,7 +112,8 @@ thickening_parameter = 0.8533333
 # lobe_exponent = 0  => the new lobe is generated from the last one.
 lobe_exponent = 0
 
-# max_slope_prob is related to the porbability that the direction of 
+
+# max_slope_prob is related to the probability that the direction of 
 # the new lobe is close to the maximum slope direction:
 # max_slope_prob = 0 => all the directions have the same probability;
 # max_slope_prob > 0 => the maximum slope direction has a larger 
@@ -124,8 +129,7 @@ max_slope_prob = 0.2
 # inertial_exponent > 0 => the max probability direction for the new lobe takes 
 #                          into account also the direction of the parent lobe and 
 #                          the inertia increaes with increasing exponent
-inertial_exponent = 0.125
-
+inertial_exponent = 0.125 
 
 
 

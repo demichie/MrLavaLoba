@@ -101,7 +101,7 @@ print ("")
 print ("Mr Lava Loba by M.de' Michieli Vitturi and S.Tarquini")
 print ("")
 
-# read the run parameters form the file inpot_data.py
+# Read the run parameters form the file inpot_data.py
 
 from input_data_advanced import *
 from input_data import *
@@ -122,7 +122,7 @@ for j in range(1,n_vents):
 if ( n_vents >1 ):
     cum_fiss_length = cum_fiss_length / cum_fiss_length[j]
 
-#search if another run with the same base name already exists
+# Search if another run with the same base name already exists
 i = 0
 
 condition = True
@@ -140,7 +140,7 @@ while condition:
 
     i = i + 1
 
-# create a backup file of the input parameters
+# Create a backup file of the input parameters
 shutil.copy2('input_data_advanced.py', backup_advanced_file)
 shutil.copy2('input_data.py', backup_file)
 
@@ -148,14 +148,14 @@ print ('Run name',run_name)
 print ('')
 
 if ( plot_flow_flag ) or ( plot_lobes_flag):
-    #  create plot
+    # Create plot
     fig     = plt.figure()
     ax      = fig.add_subplot(111)
 
 
 if ( len(shape_name) > 0 ): 
 
-    # read the shapefile
+    # Read the shapefile
     sf = shapefile.Reader(shape_name)
     recs    = sf.records()
     shapes  = sf.shapes()
@@ -197,7 +197,7 @@ else:
 print ('Maximum number of lobes',alloc_n_lobes)
 
 
-# initialize the arrays for the lobes variables
+# Initialize the arrays for the lobes variables
 angle = np.zeros(alloc_n_lobes)
 x = np.zeros(alloc_n_lobes)
 y = np.zeros(alloc_n_lobes)
@@ -220,7 +220,7 @@ if ( volume_flag == 1 ):
     elif ( fixed_dimension_flag == 2 ):
 
         lobe_area = total_volume / ( n_flows * avg_lobe_thickness * 0.5 * ( min_n_lobes + max_n_lobes ) )    
-        sys.stdout.write("Lobe area = %f m\n\n" % (lobe_area))
+        sys.stdout.write("Lobe area = %f m2\n\n" % (lobe_area))
         
 
 # Needed for numpy conversions
@@ -246,13 +246,13 @@ cols,rows,lx,ly,cell,nd = values
 arr = np.loadtxt(source, skiprows=6)
 
 nx = arr.shape[1]
-xs = lx + cell*(0.5+np.arange(0,nx))
+xs = lx + cell*(np.arange(0,nx))
 xmin = np.min(xs)
 xmax = np.max(xs)
 
 
 ny = arr.shape[0]
-ys = ly + cell*(0.5+np.arange(0,ny))
+ys = ly + cell*(np.arange(0,ny))
 ymin = np.min(ys)
 ymax = np.max(ys)
 
@@ -305,7 +305,7 @@ np.copyto(Ztot_temp,Zs)
 #Ztot[:] = Zs[:]
 #Ztot_temp[:] = Zs[:]
 
-# generate n_test random points on the domain to check if the slope is
+# Generate n_test random points on the domain to check if the slope is
 # evaluated correctly
 
 n_test = 0
@@ -318,18 +318,21 @@ for j in range(0,n_test):
     xi = (x_test - xmin)/cell
     yi = (y_test - ymin)/cell
 
+    # Index of the lower-left corner of the cell containing the point
     ix = np.floor(xi)
     iy = np.floor(yi)
 
     ix = ix.astype(int)
     iy = iy.astype(int)
 
+    # Relative coordinates of the point in the cell 
     xi_fract = xi-ix
     yi_fract = yi-iy
 
-    Fyi = ( yi_fract*( Zs[iy+1,ix+1] - Zs[iy,ix+1] ) + (1.0-yi_fract)*( Zs[iy+1,ix] - Zs[iy,ix] ) ) / cell
-    Fxi = ( xi_fract*( Zs[iy+1,ix+1] - Zs[iy+1,ix] ) + (1.0-xi_fract)*( Zs[iy,ix+1] - Zs[iy,ix] ) ) / cell
-    
+ 
+    Fxi = ( yi_fract*( Zs[iy+1,ix+1] - Zs[iy+1,ix] ) + (1.0-yi_fract)*( Zs[iy,ix+1] - Zs[iy,ix] ) ) / cell
+    Fyi = ( xi_fract*( Zs[iy+1,ix+1] - Zs[iy,ix+1] ) + (1.0-xi_fract)*( Zs[iy+1,ix] - Zs[iy,ix] ) ) / cell
+        
     angle_test = np.mod(180 + ( 180 * np.arctan2(Fy_test,Fx_test) / pi ),360)
     slope_test = np.sqrt(np.square(Fx_test)+np.square(Fy_test))
 
@@ -341,7 +344,7 @@ for j in range(0,n_test):
         plt.plot(x_test,y_test,'o')
         plt.plot( [x_test,xt] , [y_test,yt])
 	
-# compute the path of maximum slope form the vent
+# Compute the path of maximum slope form the vent
 
 xold = x_vent[0]
 yold = y_vent[0]
@@ -365,8 +368,8 @@ for i in range(0,max_slope_units):
     xi_fract = xi-ix
     yi_fract = yi-iy
 
-    Fx_test = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
-    Fy_test = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
+    Fx_test = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) + (1.0-yi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
+    Fy_test = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) + (1.0-xi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
     
     angle_test = np.mod(180 + ( 180 * np.arctan2(Fy_test,Fx_test) / pi ),360)
     slope_test = np.sqrt(np.square(Fx_test)+np.square(Fy_test))
@@ -439,14 +442,18 @@ est_rem_time = ''
 
 n_lobes_tot = 0
 
+# Loop over the number of flows defined in the input file input_data.py
 for flow in range(0,n_flows):
 
+    # Small array of integers (0 or 1 ) around the lobe defining the cells touched by the lobe   
     Zflow_local_array = np.zeros((alloc_n_lobes,max_cells,max_cells),dtype=np.int)
+
+    # Number of descendants in the tree structure of the flow 
     descendents = np.zeros(alloc_n_lobes, dtype=np.int)
 
     i_first_check = n_check_loop
 
-    # counter for the re-evaluation of the slope
+    # Counter for the re-evaluation of the slope
     flows_counter = flows_counter + 1
 
 
@@ -468,12 +475,8 @@ for flow in range(0,n_flows):
     thickness_min = 2.0 * thickness_ratio / ( thickness_ratio + 1.0 ) * avg_lobe_thickness
     delta_lobe_thickness = 2.0 * ( avg_lobe_thickness - thickness_min ) / ( n_lobes - 1.0 )
 
-    # print ('n_lobes',n_lobes)
-    # print ('thickness_min',thickness_min)
-    # print ('delta_lobe_thickness',delta_lobe_thickness)
-
     if ( n_flows > 1):
-        # print on screen bar with percentage of flows computed
+        # Print on screen bar with percentage of flows computed
         last_percentage_5 = np.rint(flow*20.0/(n_flows)).astype(int)
         last_percentage = np.rint(flow*100.0/(n_flows))
         last_percentage = np.rint(flow*100.0/(n_flows))
@@ -482,20 +485,20 @@ for flow in range(0,n_flows):
         sys.stdout.write("[%-20s] %d%% %s" % ('='*(last_percentage_5), last_percentage, est_rem_time))
         sys.stdout.flush()
 
-    # modify the slope 
+    # Modify the slope 
     if ( topo_mod_flag >= 1) and ( flows_counter == n_flows_counter ):
 
         flows_counter = 0
 
-        # Ztot[:] = Ztot_temp[:]
         np.copyto(Ztot,Ztot_temp)
         
     lobes_counter = 0
 
     for i in range(0,n_init):
-        
+
+
         if ( n_flows == 1 ):
-            # print on screen bar with percentage of flows computed
+            # Print on screen bar with percentage of flows computed
             last_percentage = np.rint(i*20.0/(n_lobes-1))*5
             last_percentage = last_percentage.astype(int)
 
@@ -505,63 +508,71 @@ for flow in range(0,n_flows):
 
 
         # STEP 0: COMPUTE THE FIRST LOBES OF EACH FLOW
+      
+        if ( n_vents == 1 ):
 
-        if ( vent_flag == 0 ):
+            x[i] = x_vent[0]
+            y[i] = y_vent[0]
+ 
+	else:
 
-            i_vent = np.int(np.floor( flow * n_vents / n_flows ) )
+            if ( vent_flag == 0 ):
 
-            x[i] = x_vent[i_vent]
-            y[i] = y_vent[i_vent]
+                i_vent = np.int(np.floor( flow * n_vents / n_flows ) )
 
-
-        elif ( vent_flag == 1 ):
-
-            i_vent = np.random.randint(n_vents, size=1)
-
-            x[i] = x_vent[i_vent]
-            y[i] = y_vent[i_vent]
-
-        elif ( vent_flag == 2 ):
-
-            alfa_polyline = np.random.uniform(0, 1, size=1)
-
-            idx_vent = np.argmax(cum_fiss_length>alfa_polyline)
+                x[i] = x_vent[i_vent]
+                y[i] = y_vent[i_vent]
 
 
-            num = alfa_polyline - cum_fiss_length[idx_vent-1]
-            den = cum_fiss_length[idx_vent] - cum_fiss_length[idx_vent-1]
+            elif ( vent_flag == 1 ):
 
-            alfa_segment = num / den
+                i_vent = np.random.randint(n_vents, size=1)
 
-            x[i] = alfa_segment * x_vent[idx_vent] + ( 1.0 - alfa_segment ) * x_vent[idx_vent-1] 
-            y[i] = alfa_segment * y_vent[idx_vent] + ( 1.0 - alfa_segment ) * y_vent[idx_vent-1]
+                x[i] = x_vent[i_vent]
+                y[i] = y_vent[i_vent]
+
+            elif ( vent_flag == 2 ):
+
+                alfa_polyline = np.random.uniform(0, 1, size=1)
+
+                idx_vent = np.argmax(cum_fiss_length>alfa_polyline)
+
+
+                num = alfa_polyline - cum_fiss_length[idx_vent-1]
+                den = cum_fiss_length[idx_vent] - cum_fiss_length[idx_vent-1]
+
+                alfa_segment = num / den
+
+                x[i] = alfa_segment * x_vent[idx_vent] + ( 1.0 - alfa_segment ) * x_vent[idx_vent-1] 
+                y[i] = alfa_segment * y_vent[idx_vent] + ( 1.0 - alfa_segment ) * y_vent[idx_vent-1]
             
 
-        elif ( vent_flag == 3 ):
+            elif ( vent_flag == 3 ):
 
-            i_segment = np.random.randint(n_vents-1, size=1)
+                i_segment = np.random.randint(n_vents-1, size=1)
             
-            alfa_segment = np.random.uniform(0, 1, size=1)
+                alfa_segment = np.random.uniform(0, 1, size=1)
             
-            x[i] = alfa_segment * x_vent[i_segment] + ( 1.0 - alfa_segment ) * x_vent[i_segment-1] 
-            y[i] = alfa_segment * y_vent[i_segment] + ( 1.0 - alfa_segment ) * y_vent[i_segment-1]
+                x[i] = alfa_segment * x_vent[i_segment] + ( 1.0 - alfa_segment ) * x_vent[i_segment-1] 
+                y[i] = alfa_segment * y_vent[i_segment] + ( 1.0 - alfa_segment ) * y_vent[i_segment-1]
 
-        
+
+        # Initialize distance from first lobe and number of descendents        
         dist_int[i] = 0
         descendents[i] = 0
         
         if ( plot_lobes_flag ) or ( plot_flow_flag):
 
-            # plot the center of the first lobe
-        
+            # plot the center of the first lobe        
             plt.plot(x[i],y[i],'o')
         
-        # Fx_test = Fx_interp(x[i],y[i])
-        # Fy_test = Fy_interp(x[i],y[i])
+        # Compute the gradient of the topography(+ eventually the flow)
+
 
         xi = (x[i] - xmin)/cell
         yi = (y[i] - ymin)/cell
 
+        # Index of the lower-left corner of the cell containing the point
         ix = np.floor(xi)
         iy = np.floor(yi)
 
@@ -571,9 +582,8 @@ for flow in range(0,n_flows):
         xi_fract = xi-ix
         yi_fract = yi-iy
 
-        Fx_test = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) + (1.0-xi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
-        Fy_test = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) + (1.0-yi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
-
+        Fx_test = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) + (1.0-yi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
+        Fy_test = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) + (1.0-xi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
 
     
         # major semi-axis direction
@@ -635,32 +645,28 @@ for flow in range(0,n_flows):
             min_ye = np.min(ye)
             max_ye = np.max(ye)
 
-            i_left = np.argmax(xs>min_xe)-2
-            i_right = np.argmax(xs>max_xe)+2
-            
-            j_bottom = np.argmax(ys>min_ye)-2
-            j_top = np.argmax(ys>max_ye)+2
+            xi = (min_xe - xmin)/cell
+            ix = np.floor(xi)
+            i_left = ix.astype(int)-1
 
-            #min_xe = x[i] - max_semiaxis
-            #max_xe = x[i] + max_semiaxis
+            xi = (max_xe - xmin)/cell
+            ix = np.floor(xi)
+            i_right = ix.astype(int)+3
 
-            #min_ye = y[i] - max_semiaxis
-            #max_ye = y[i] + max_semiaxis
+            yj = (min_ye - ymin)/cell
+            jy = np.floor(yj)
+            j_bottom = jy.astype(int)-1            
 
-            #xi = (min_xe - xmin)/cell
-            #yi = (min_ye - ymin)/cell
+            yj = (max_ye - ymin)/cell
+            jy = np.floor(yj)
+            j_top = jy.astype(int)+3            
 
-            #ix = np.floor(xi)
-            #iy = np.floor(yi)
-
-            #i_left = ix.astype(int)
-            #i_bottom = iy.astype(int)            
-            
         
             Xs_local = Xs[j_bottom:j_top,i_left:i_right]
             Ys_local = Ys[j_bottom:j_top,i_left:i_right]
 
             area_fract = local_intersection(Xs_local,Ys_local,x[i],y[i],x1[i],x2[i],angle[i],xv,yv,nv2)
+
 
             Zflow_local = area_fract
             Zflow_local_int = np.ceil(area_fract)
@@ -670,7 +676,7 @@ for flow in range(0,n_flows):
             lobe_thickness = thickness_min + ( i-1 ) * delta_lobe_thickness
 
             Zflow[j_bottom:j_top,i_left:i_right] += lobe_thickness * Zflow_local
-
+            
             Ztot_temp[j_bottom:j_top,i_left:i_right] = Zs[j_bottom:j_top,i_left:i_right] + \
                                                   filling_parameter * Zflow[j_bottom:j_top,i_left:i_right]
 
@@ -707,8 +713,11 @@ for flow in range(0,n_flows):
             w.poly(parts=[shape_verts.tolist()])
             w.record(str(i+1),str(dist_int[i]),str(descendents[i]),str(0),str(flow+1))
 
+    last_lobe = n_lobes
 
     for i in range(n_init,n_lobes):
+
+        #print('i',i)
 
         if ( n_flows == 1 ):
             # print on screen bar with percentage of flows computed
@@ -764,15 +773,12 @@ for flow in range(0,n_flows):
 
             idx = i-1
 
-        # local slope of the topography. The slope affects both the location of 
-        # the new lobe on the boundary of the previous one and its aspect
-        # ratio:
-        # if slope = 0 the lobe is a circle (x1=x2);
-        # if slope > 1 the lobe is an ellipse.
 		
-            
+        # save the index of the parent and the distance from first lobe of the chain    
         parent[i] = idx
         dist_int[i] = dist_int[idx] + 1
+
+        # for all the "ancestors" increase by one the number of descendents 
 
         last = i
 
@@ -781,48 +787,96 @@ for flow in range(0,n_flows):
             previous = parent[last]
             descendents[previous] = descendents[previous]+1
             last = previous
-		
-        # STEP 1: COMPUTE THE SLOPE AND THE MAXIMUM SLOPE ANGLE
-  
-        # Fx_lobe = Fx_interp(x[idx],y[idx])
-        # Fy_lobe = Fy_interp(x[idx],y[idx])
 
+
+        # local slope of the topography. The slope affects both the location of 
+        # the new lobe on the boundary of the previous one and its aspect
+        # ratio:
+        # if slope = 0 the lobe is a circle (x1=x2);
+        # if slope > 1 the lobe is an ellipse.
+
+		
+        # STEP 1: COMPUTE THE SLOPE AND THE MAXIMUM SLOPE ANGLE 
+        #         The direction az_i as described in the paper is found here 
+
+        # Search for the cell containing the center of the parent lobe
         xi = (x[idx] - xmin)/cell
         yi = (y[idx] - ymin)/cell
 
+        # Indexes of the lower-left corner of the cell containing the center of the parent lobe     
         ix = np.floor(xi)
         iy = np.floor(yi)
 
+        # Convert to integer
         ix = ix.astype(int)
         iy = iy.astype(int)
 
+        # Indexes of the top-right corner of the cell containing the center of the parent lobe     
         ix1 = ix+1
         iy1 = iy+1
 
-        if ( ix <= 1 ) or ( ix1 >= nx-1 ) or ( iy <= 1 ) or ( iy1 >= ny-1 ):
+        # Stopping condition (lobe close the domain boundary)
+        if ( ix <= max_cells ) or ( ix1 >= nx-max_cells ) or ( iy <= max_cells ) or ( iy1 >= ny-max_cells ):
 
+            last_lobe = i-1
             break
 
+        # Relative coordinates of the center of the parent lobe in the cell
         xi_fract = xi-ix
         yi_fract = yi-iy
 
-        Fx_lobe = ( xi_fract * ( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
-                    + (1.0-xi_fract) * ( Ztot[iy,ix1] - Ztot[iy,ix] ) ) / cell
+        # Ztot at the parent lobe center (obained with a bilinear interpolation)
+        zidx = xi_fract * ( yi_fract * Ztot[iy1,ix1] + (1.0-yi_fract) * Ztot[iy,ix1] ) \
+              + (1.0-xi_fract) * ( yi_fract * Ztot[iy1,ix] + (1.0-yi_fract) * Ztot[iy,ix] )
 
-        Fy_lobe = ( yi_fract * ( Ztot[iy1,ix1] - Ztot[iy,ix1] ) \
-                    + (1.0-yi_fract) * ( Ztot[iy1,ix] - Ztot[iy,ix] ) ) / cell
+        # Compute n_points on the parent lobe boundary to search for the point with minimum Ztot
+        [ xe , ye ] = ellipse( x[idx] , y[idx] , x1[idx] , x2[idx] , angle[idx] , X_circle , Y_circle )
 
+        xei = (xe - xmin)/cell
+        yei = (ye - ymin)/cell
+
+        # Indexes of the lower-left corners of the cells containing the points on the lobe boundary     
+        ixe = np.floor(xei)
+        iye = np.floor(yei)
+
+        # Convert to integers
+        ixe = ixe.astype(int)
+        iye = iye.astype(int)
+
+        # Indexes of the top-right corners of the cells containing the points on the lobe boundary     
+        ixe1 = ixe+1
+        iye1 = iye+1
+
+        # Relative coordinates of the n_points in the respective containing cells
+        xei_fract = xei-ixe
+        yei_fract = yei-iye
         
-        slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
-        # angle defining the direction of maximum slope (max_slope_angle = aspect)
-        max_slope_angle = np.mod(180 + ( 180 * np.arctan2(Fy_lobe,Fx_lobe) / pi ),360)
-        
+        # Ztot at the n_points on the parent lobe boundary (obained with a bilinear interpolation)
+        ze = xei_fract * ( yei_fract * Ztot[iye1,ixe1] + (1.0-yei_fract) * Ztot[iye,ixe1] ) \
+              + (1.0-xei_fract) * ( yei_fract * Ztot[iye1,ixe] + (1.0-yei_fract) * Ztot[iye,ixe] )
+
+        # Index of the point with minimum Ztot
+        idx_min = np.argmin(ze)
+
+        # Components of the vector from the parent lobe center to the point of minimum
+        dx_lobe = x[idx] - xe[idx_min]
+        dy_lobe = y[idx] - ye[idx_min]
+        dz_lobe = zidx - ze[idx_min]
+
+        # Slope of the vector
+        slope = np.maximum( 0.0 , dz_lobe / ( np.sqrt(np.square(dx_lobe)+np.square(dy_lobe) ) ) )
+
+        # Angle defining the direction of maximum slope
+        max_slope_angle = np.mod(180 + ( 180 * np.arctan2(dy_lobe,dx_lobe) / pi ),360)
+       
         # STEP 2: PERTURBE THE MAXIMUM SLOPE ANGLE ACCORDING TO PROBABILITY LAW
-        
-        # this expression define a coefficient used for the direction of the next slope
+        #         the direction az_i' as described in the paper is found here        
+
+
+        # This expression define a coefficient used for the direction of the next slope
         if ( max_slope_prob < 1 ):
 
-            # angle defining the direction of the new slope. when slope=0, then
+            # Angle defining the direction of the new slope. when slope=0, then
             # we have an uniform distribution for the possible angles for the next lobe.  
 
             slopedeg = 180.0 * np.arctan(slope) / pi
@@ -846,6 +900,7 @@ for flow in range(0,n_flows):
 
 
         # STEP 3: ADD THE EFFECT OF INERTIA
+        #         the direction az_i'' as described in the paper is found here        
 		   
         # cos and sin of the angle of the parent lobe
         cos_angle1 = np.cos(angle[idx]*deg2rad)
@@ -896,18 +951,16 @@ for flow in range(0,n_flows):
 		
         # (delta_x,delta_y) is obtained rotating the vector (xt,yt) by the
         # angle defined by the major semi-axis of the existing lobe. In this
-        # way we obtain the location in a coordiante-system centered in the
+        # way we obtain the location in a coordinate-system centered in the
         # center of the existing lobe, but this time with the axes parallel to
         # the original x and y axes.
 
         delta_x = xt * cos_angle1 - yt * sin_angle1
         delta_y = xt * sin_angle1 + yt * cos_angle1
 		   
-        # the slope coefficient is evaluated at the point of the boundary of the ellipse
+        # The slope coefficient is evaluated at the point of the boundary of the ellipse
         # definind by the direction of the new lobe
-        # Fx_lobe = Fx_interp(x[idx]+delta_x,y[idx]+delta_y)
-        # Fy_lobe = Fy_interp(x[idx]+delta_x,y[idx]+delta_y)
-
+        
         xi = (x[idx]+delta_x - xmin)/cell
         yi = (y[idx]+delta_y - ymin)/cell
 
@@ -920,21 +973,21 @@ for flow in range(0,n_flows):
         ix1 = ix+1
         iy1 = iy+1
 
-        if ( ix <= 1 ) or ( ix1 >= nx-1 ) or ( iy <= 1 ) or ( iy1 >= ny-1 ):
+        # Stopping condition (lobe close the domain boundary)
+        if ( ix <= max_cells ) or ( ix1 >= nx-max_cells ) or ( iy <= max_cells ) or ( iy1 >= ny-max_cells ):
 
+            last_lobe = i-1
             break
 
         xi_fract = xi-ix
         yi_fract = yi-iy
-        
-        Fx_lobe = ( xi_fract*( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
-                    + (1.0-xi_fract)*( Ztot[iy,ix1] - Ztot[iy,ix] ) ) / cell
 
-        Fy_lobe = ( yi_fract*( Ztot[iy1,ix1] - Ztot[iy,ix1] ) \
-                    + (1.0-yi_fract)*( Ztot[iy1,ix] - Ztot[iy,ix] ) ) / cell
+        # ztot at the new budding point
+        ze = xi_fract * ( yi_fract * Ztot[iy1,ix1] + (1.0-yi_fract) * Ztot[iy,ix1] ) \
+              + (1.0-xi_fract) * ( yi_fract * Ztot[iy1,ix] + (1.0-yi_fract) * Ztot[iy,ix] )
 
-        
-        slope = np.sqrt(np.square(Fx_lobe)+np.square(Fy_lobe))
+        slope = np.maximum( 0.0 , ( zidx - ze ) / ( np.sqrt(np.square(delta_x)+np.square(delta_y) ) ) )
+
         aspect_ratio = min(max_aspect_ratio,1.0 + aspect_ratio_coeff * slope)
 
         # (new_x1,new_x2) are the semi-axes of the new lobe. slope_coeff is
@@ -963,14 +1016,14 @@ for flow in range(0,n_flows):
         y_new = y[idx] + v * delta_y
             
                         
-        # plot the new lobe
+        # Plot the new lobe
         if ( plot_lobes_flag == 1 ):
 
             patch.append(Ellipse([x_new,y_new], 2*new_x1, 2*new_x2, new_angle, \
                                  facecolor = 'none',edgecolor='r'))
                                 
                 
-        # store the parameters of the new lobe in arrays    
+        # Store the parameters of the new lobe in arrays    
         angle[i] = new_angle
         x1[i] = new_x1
         x2[i] = new_x2
@@ -979,7 +1032,7 @@ for flow in range(0,n_flows):
 		
         if ( saveshape_flag ):
 
-            # compute the lobe
+            # Compute n_points on the lobe boundary
             [ xe , ye ] = ellipse( x_new, y_new, new_x1, new_x2, new_angle , X_circle , Y_circle )
 
             shape_verts[0:npoints-1,0] = xe[0:npoints-1]
@@ -988,96 +1041,71 @@ for flow in range(0,n_flows):
             w.poly(parts=[shape_verts.tolist()])
             w.record(str(i+1),dist_int[i],str(descendents[i]),str(parent[i]),str(flow+1))
   
-        # check the grid points covered by the lobe
+        # Check the grid points covered by the lobe
         if ( saveraster_flag == 1 ) or ( topo_mod_flag >= 1) or ( plot_flow_flag):
             
-            # compute the last lobe 
+            # Compute n_points on the new lobe boundary 
             [ xe , ye ] = ellipse( x[i], y[i], x1[i], x2[i], angle[i] , X_circle , Y_circle )
          
-            # boundgin box for the lobe
+            # Bounding box for the new lobe
             min_xe = np.min(xe)
             max_xe = np.max(xe)
                 
             min_ye = np.min(ye)
             max_ye = np.max(ye)
-                               
-            i_parent = parent[i]
-                           
-            if ( min_xe < xs[0] ):
 
-                i_left = 0
+            xi = (min_xe - xmin)/cell
+            ix = np.floor(xi)
+            i_left = ix.astype(int)-1
+            i_left = np.maximum( 0 , np.minimum( nx-1 , i_left ) )
 
-            elif ( min_xe >= xs[nx-1] ):
+            xi = (max_xe - xmin)/cell
+            ix = np.floor(xi)
+            i_right = ix.astype(int)+3
+            i_right = np.maximum( 0 , np.minimum( nx-1 , i_right ) )
 
-                i_left = nx-1
+            yj = (min_ye - ymin)/cell
+            jy = np.floor(yj)
+            j_bottom = jy.astype(int)-1            
+            j_bottom = np.maximum( 0 , np.minimum( ny-1 , j_bottom ) )
 
-            else:
-                    
-                i_left = np.argmax(xs>min_xe)-2
+            yj = (max_ye - ymin)/cell
+            jy = np.floor(yj)
+            j_top = jy.astype(int)+3            
+            j_top = np.maximum( 0 , np.minimum( ny-1 , j_top ) )
 
-
-            if ( max_xe < xs[0] ):
-
-                i_right = 0
-                
-            elif ( max_xe >= xs[nx-1] ):
-
-                i_right = nx-1
-
-            else:
-                
-                i_right = np.argmax(xs>max_xe)+2
-
-
-            if ( min_ye < ys[0] ):
-
-                j_bottom = 0
-
-            elif ( min_ye >= ys[ny-1] ):
-
-                j_bottom = ny-1
-
-            else:
-                    
-                j_bottom = np.argmax(ys>min_ye)-2
-
-            if ( max_ye < ys[0] ):
-
-                j_top = 0
-
-            elif ( max_ye >= ys[ny-1] ):
-
-                j_top = ny-1
-
-            else:
-
-                j_top = np.argmax(ys>max_ye)+2
-
+            # Copy the full grid within the bounding box on a local one to work on a smaller 
+            # domain and reduce the computational cost
             Xs_local = Xs[j_bottom:j_top,i_left:i_right]
             Ys_local = Ys[j_bottom:j_top,i_left:i_right]
         
-
+            # Compute the fraction of cells covered by the lobe (local indexing)
             area_fract = local_intersection(Xs_local,Ys_local,x[i],y[i],x1[i],x2[i],angle[i],xv,yv,nv2)
+
             Zflow_local = area_fract
+
+            # Compute the local integer covering (0-not covered  1-covered) 
             Zflow_local_int = np.ceil(area_fract)
             Zflow_local_int = Zflow_local_int.astype(int)
+
+            # Define the distance (number of lobes) from the vent (local indexing)
             Zdist_local = Zflow_local_int * dist_int[i] + 9999 * ( Zflow_local == 0 )
 
-
-            # update the minimum distance (number of lobes) from the vent
-            Zdist_local = Zflow_local * dist_int[i] + 9999 * ( Zflow_local == 0 )
-
+            # update the minimum distance in the global indexing
             Zdist[j_bottom:j_top,i_left:i_right] = np.minimum( Zdist[j_bottom:j_top,i_left:i_right] , \
                                                                Zdist_local )
-                
+
+            # Compute the thickness of the lobe                
             lobe_thickness = thickness_min + ( i-1 ) * delta_lobe_thickness
 
-            # update the thickness for the grid points selected
+            # Update the thickness for the grid points selected (global indexing)
             Zflow[j_bottom:j_top,i_left:i_right] += lobe_thickness*Zflow_local
 
             Ztot_temp[j_bottom:j_top,i_left:i_right] = Zs[j_bottom:j_top,i_left:i_right] + \
                                                   filling_parameter * Zflow[j_bottom:j_top,i_left:i_right]
-            
+
+
+            # Save the bounding box of the i-th lobe            
             jtop_array[i] = j_top
             jbottom_array[i] = j_bottom
             
@@ -1086,8 +1114,20 @@ for flow in range(0,n_flows):
 
             if ( hazard_flag ):
 
-                # store the local arrays used later for the hazard map
+                # Store the local arrays used later for the hazard map
 
+                if not ( Zflow_local_int.shape[0] == ( j_top-j_bottom ) ):
+
+                    print(Zflow_local_int.shape[0], j_top, j_bottom)
+                    print(Zflow_local_int.shape[1], i_right , i_left)
+                    print('')
+
+                if not ( Zflow_local_int.shape[1] == ( i_right - i_left ) ):
+
+                    print(Zflow_local_int.shape[0], j_top, j_bottom)
+                    print(Zflow_local_int.shape[1], i_right , i_left)
+                    print('')
+ 
                 if ( np.max(Zflow_local.shape) > Zflow_local_array.shape[1] ):
 
                     print (cell,new_x1,new_x2,new_angle)
@@ -1113,28 +1153,24 @@ for flow in range(0,n_flows):
                 if ( max_delta <= max_cells ):
 
                     i_first_check = i + n_check_loop
-
-                    # Ztot[:] = Ztot_temp[:]
                     np.copyto(Ztot,Ztot_temp)
 
 
             lobes_counter = lobes_counter + 1
 
-        # update the deposit of the lava lobes over the computational grid
+        # Update the deposit of the lava lobes over the computational grid
         if ( topo_mod_flag == 2 ) and ( lobes_counter == n_lobes_counter ):
 		    
             lobes_counter = 0
-
-            # Ztot[:] = Ztot_temp[:]
             np.copyto(Ztot,Ztot_temp)
 
 
     if ( hazard_flag ):
 
-        # update the hazard map accuunting for the number of descendents, representative
+        # Update the hazard map accounting for the number of descendents, representative
         # of the number of times a flow has passed over a cell
 
-        for i in range(0,n_lobes):
+        for i in range(0,last_lobe):
 
             j_top = jtop_array[i]
             j_bottom = jbottom_array[i]
@@ -1144,57 +1180,11 @@ for flow in range(0,n_flows):
 
             if ( i > 0):
                 
-                #print('idx',i)  
-                #print('idx parent',parent[i])  
-                #print('j',jbottom_array[parent[i]],jtop_array[parent[i]])
-                #print('i',ileft_array[parent[i]],iright_array[parent[i]])
-
-                #print(Zflow_local_array[parent[i],0:jtop_array[parent[i]]-jbottom_array[parent[i]], \
-                #                        0:iright_array[parent[i]]-ileft_array[parent[i]]])
-
-
-                #print('j',j_bottom,j_top)
-                #print('i',i_left,i_right)
-
-                #print(Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left])
-
-
                 j_top_int = np.minimum( j_top , jtop_array[parent[i]] )
                 j_bottom_int = np.maximum( j_bottom , jbottom_array[parent[i]] )
                 i_left_int = np.maximum( i_left , ileft_array[parent[i]] )
                 i_right_int = np.minimum( i_right , iright_array[parent[i]] )
                       
-                #print(j_bottom_int,j_top_int,i_left_int,i_right_int)
-
-                #print(np.maximum(0,j_bottom_int-j_bottom), \
-                #      np.minimum(j_top_int-j_bottom,j_top-j_bottom),   \
-                #      np.maximum(i_left_int-i_left,0) ,   \
-                #      np.minimum(i_right_int-i_left,i_right-i_left) )
-
-                #print(np.maximum(0,j_bottom_int-jbottom_array[parent[i]]), \
-                #      np.minimum(j_top_int-jbottom_array[parent[i]],jtop_array[parent[i]]-jbottom_array[parent[i]]),   \
-                #      np.maximum(i_left_int-ileft_array[parent[i]],0) ,   \
-                #      np.minimum(i_right_int-ileft_array[parent[i]],iright_array[parent[i]]-ileft_array[parent[i]]) )
-
-                #print(Zflow_local_array[parent[i],np.maximum(0,j_bottom_int-jbottom_array[parent[i]]): \
-                #      np.minimum(j_top_int-jbottom_array[parent[i]],jtop_array[parent[i]]-jbottom_array[parent[i]]),   \
-                #      np.maximum(i_left_int-ileft_array[parent[i]],0):   \
-                #      np.minimum(i_right_int-ileft_array[parent[i]],iright_array[parent[i]]-ileft_array[parent[i]])] )
-
-                #print(Zflow_local_array[i,np.maximum(0,j_bottom_int-j_bottom): \
-                #      np.minimum(j_top_int-j_bottom,j_top-j_bottom),   \
-                #      np.maximum(i_left_int-i_left,0):   \
-                #      np.minimum(i_right_int-i_left,i_right-i_left)] )
-
-                #print(Zflow_local_array[i,np.maximum(0,j_bottom_int-j_bottom): \
-                #      np.minimum(j_top_int-j_bottom,j_top-j_bottom),   \
-                #      np.maximum(i_left_int-i_left,0):   \
-                #      np.minimum(i_right_int-i_left,i_right-i_left)] * \
-                #      ( 1 - Zflow_local_array[parent[i],np.maximum(0,j_bottom_int-jbottom_array[parent[i]]): \
-                #      np.minimum(j_top_int-jbottom_array[parent[i]],jtop_array[parent[i]]-jbottom_array[parent[i]]),   \
-                #      np.maximum(i_left_int-ileft_array[parent[i]],0):   \
-                #      np.minimum(i_right_int-ileft_array[parent[i]],iright_array[parent[i]]-ileft_array[parent[i]])] ))
-
 
                 Zlocal_new = np.zeros((max_cells,max_cells),dtype=np.int)
                 Zlocal_parent = np.zeros((max_cells,max_cells),dtype=np.int)
@@ -1208,15 +1198,22 @@ for flow in range(0,n_flows):
 
                 Zlocal_new = Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left]
 
-                Zlocal_new[np.maximum(0,j_bottom_int-j_bottom): \
+                if ( Zlocal_parent.shape[0]==0 or Zlocal_parent.shape[1]==0 ):
+
+                    print('check')
+                    print('idx',i)  
+                    print('j',j_bottom,j_top)
+                    print('i',i_left,i_right)
+                    print('idx parent',parent[i])  
+                    print('j',jbottom_array[parent[i]],jtop_array[parent[i]])
+                    print('i',ileft_array[parent[i]],iright_array[parent[i]])
+                    print(j_bottom_int,j_top_int,i_left_int,i_right_int)
+
+                Zlocal_new[np.maximum(0,j_bottom_int-j_bottom):        \
                       np.minimum(j_top_int-j_bottom,j_top-j_bottom),   \
-                      np.maximum(i_left_int-i_left,0):   \
+                      np.maximum(i_left_int-i_left,0):                 \
                       np.minimum(i_right_int-i_left,i_right-i_left)] *= ( 1 - Zlocal_parent )
 
-                #print('Zlocal_new\n')
-                #print(Zlocal_new)                
-
-                #time.sleep(5.5)
 
                 Zhazard[j_bottom:j_top,i_left:i_right] += descendents[i] \
                                                         * Zlocal_new[0:j_top-j_bottom,0:i_right-i_left]
