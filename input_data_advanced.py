@@ -4,7 +4,6 @@
 # If you want to use more than one file separate them with a comma.
 # Example: restart_file = ['flow_001_thickness_full.asc','flow_002_thickness_full.asc]
 restart_files = []
-
 # If saveshape_flag = 1 then the output with the lobes is saved on a shapefile
 saveshape_flag = 0
 
@@ -52,7 +51,7 @@ n_check_loop = 0
 #			       the vent have a higher probability
 # start_form_dist_flag = 0  => the younger lobes have a higher
 # 			       probability
-start_from_dist_flag = 0
+start_from_dist_flag = 0 
 
 # This factor is to choose where the center of the new lobe will be:
 # dist_fact = 0  => the center of the new lobe is on the border of the
@@ -60,7 +59,7 @@ start_from_dist_flag = 0
 # dist fact > 0  => increase the distance of the center of the new lobe
 # 		    from the border of the previous one;
 # dist_fact = 1  => the two lobes touch in one point only.
-dist_fact = 1.0
+dist_fact = 1
 
 # Number of points for the lobe profile
 npoints = 30
@@ -72,7 +71,7 @@ npoints = 30
 #			     increasing with the slope 
 aspect_ratio_coeff = 2.0
 
-# Maximum aspect ration of the lobes 
+# Maximum aspect ratio of the lobes 
 max_aspect_ratio = 2.5
 
 # Shapefile name (use '' if no shapefile is present)
