@@ -37,7 +37,6 @@ hazard_flag = 1
 masking_threshold = 0.96
 
 # Number of flows
-# default is 
 n_flows = 700
 
 # Minimum number of lobes generated for each flow
@@ -62,11 +61,9 @@ total_volume = 650000000  # m^3
 fixed_dimension_flag = 2
 
 # Area of each lobe ( only effective when volume_flag = 0 or fixed_dimension_flag = 1 )
-# default lobe_area = 1000   # m^2
 lobe_area = 900   # m^2 
 
 # Thickness of each lobe ( only effective when volume_flag = 0 or fixed_dimension_flag  2 )
-# defualt avg_lobe_thickness = 0.02   # m
 avg_lobe_thickness = 0.07
 
 # Ratio between the thickness of the first lobe of the flow and the thickness of the
@@ -74,7 +71,6 @@ avg_lobe_thickness = 0.07
 # thickness_ratio < 1   => the thickness increases with lobe "age"
 # thickness_ratio = 1   => all the lobes have the same thickness
 # thickness_ratio > 1   => the thickness decreases with lobe "age"
-# default thickness_ratio = 1
 thickness_ratio = 2
 
 # This flag controls if the topography is modified by the lobes and if the
@@ -132,7 +128,6 @@ max_slope_prob = 0.7
 # inertial_exponent > 0 => the max probability direction for the new lobe takes 
 #                          into account also the direction of the parent lobe and 
 #                          the inertia increaes with increasing exponent
-# default inertial_exponent = 0.125
 inertial_exponent = 0.1 
 
 
