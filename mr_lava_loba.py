@@ -748,7 +748,9 @@ for flow in range(0,n_flows):
 
         # stopping condition (lobe close the domain boundary)
         if ( ix <= 0.5 * max_cells ) or ( ix1 >= (nx - 0.5*max_cells) ) or \
-           ( iy <= 0.5 * max_cells ) or ( iy1 >= (ny - 0.5*max_cells) ):
+           ( iy <= 0.5 * max_cells ) or ( iy1 >= (ny - 0.5*max_cells) ) or \
+           ( Zc[iy,ix] == nd ) or ( Zc[iy1,ix1] == nd ) or \
+           ( Zc[iy,ix1] == nd ) or ( Zc[iy1,ix] == nd ):
 
             last_lobe = i-1
             break
