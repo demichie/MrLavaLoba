@@ -341,7 +341,11 @@ print ('')
 # counter for the re-evaluation of the slope
 flows_counter = 0
 
-start = time.process_time()
+if sys.version_info >= (3, 0):
+    start = time.process_time()
+else:
+    start = time.clock()
+
 
 est_rem_time = ''
 
@@ -1191,7 +1195,10 @@ for flow in range(0,n_flows):
         p = PatchCollection(patch, match_original = True)
         ax.add_collection(p)
 
-    elapsed = (time.process_time() - start)
+    if sys.version_info >= (3, 0):
+        elapsed = (time.process_time() - start)
+    else:
+        elapsed = (time.clock() - start)
 
     estimated = np.ceil( elapsed * n_flows / (flow+1) - elapsed )
     est_rem_time = str(datetime.timedelta(seconds=estimated))
@@ -1204,7 +1211,11 @@ if ( n_flows > 1):
     sys.stdout.write("[%-20s] %d%%" % ('='*20, last_percentage))
     sys.stdout.flush()
 
-elapsed = (time.process_time() - start)
+if sys.version_info >= (3, 0):
+    elapsed = (time.process_time() - start)
+else:
+    elapsed = (time.clock() - start)
+
 
 print ('')
 print ('')
