@@ -218,12 +218,12 @@ if ( volume_flag == 1 ):
 
 # Needed for numpy conversions
 pi = 3.141592653589793
-deg2rad = pi / 180.0
-rad2deg = 180.0 / pi
+deg2rad = np.pi / 180.0
+rad2deg = 180.0 / np.pi
 
 
 # Define variables needed to build the ellipses
-t = np.linspace(0,2*np.pi,npoints)
+t = np.linspace(0.0,2.0*np.pi,npoints)
 X_circle = np.cos(t)
 Y_circle = np.sin(t)
 
@@ -231,8 +231,7 @@ Y_circle = np.sin(t)
 # Parse the header using a loop and
 # the built-in linecache module
 hdr = [getline(source, i) for i in range(1,7)]
-values = [float(h.split(" ")[-1].strip()) \
- for h in hdr]
+values = [float(h.split(" ")[-1].strip()) for h in hdr]
 cols,rows,lx,ly,cell,nd = values
 
 # Load the dem into a numpy array
@@ -1281,9 +1280,22 @@ if ( saveraster_flag == 1 ):
                 
                     print('')
                     print ('Total volume',cell**2*total_Zflow, \
-                           ' Masked volume',cell**2*np.sum( masked_Zflow ), \
-                           ' Volume fraction',coverage_fraction)
+                           ' m3 Masked volume',cell**2*np.sum( masked_Zflow ), \
+                           ' m3 Volume fraction',coverage_fraction)
+                    print ('Total area',cell**2*np.sum( Zflow >0 ), \
+                           ' m2 Masked area',cell**2*np.sum( masked_Zflow >0 ),' m2')
+                    print ('Average thickness full',total_Zflow/np.sum( Zflow >0 ), \
+                           ' m Average thickness mask',np.sum( masked_Zflow )/ np.sum( masked_Zflow >0 ),' m')
 
+                output_thickness = run_name + '_avg_thick.txt'
+                with open(output_thickness, 'a') as the_file:
+                    the_file.write('Average lobe thickness = '+str(avg_lobe_thickness)+' m\n')
+                    the_file.write('Total volume = '+str(cell**2*total_Zflow)+' m3\n')
+                    the_file.write('Masked volume = '+str(cell**2*np.sum( masked_Zflow ))+' m3\n')
+                    the_file.write('Total area = '+str(cell**2*np.sum( Zflow >0 ))+' m2\n')
+                    the_file.write('Masked area = '+str(cell**2*np.sum( masked_Zflow >0 ))+' m2\n')
+                    the_file.write('Average thickness full = '+str(total_Zflow/np.sum( Zflow >0 ))+' m\n')
+                    the_file.write('Average thickness mask = '+str(np.sum( masked_Zflow )/ np.sum( masked_Zflow >0 ))+' m\n')
 
                 output_masked = run_name + '_thickness_masked.asc'
 
