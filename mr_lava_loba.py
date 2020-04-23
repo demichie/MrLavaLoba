@@ -234,15 +234,63 @@ hdr = [getline(source, i) for i in range(1,7)]
 values = [float(h.split(" ")[-1].strip()) for h in hdr]
 cols,rows,lx,ly,cell,nd = values
 
-# Load the dem into a numpy array
-arr = np.loadtxt(source, skiprows=6)
+crop_flag = ( "west_to_vent" in locals() ) and ( "east_to_vent" in locals() ) \
+           and ( "south_to_vent" in locals() ) and ( "north_to_vent" in locals() )
 
-nx = arr.shape[1]
-ny = arr.shape[0]
+print('Crop flag = ',crop_flag)
 
-# the values are associated to the center of the pixels
-xc = lx + cell*(0.5+np.arange(0,nx))
-yc = ly + cell*(0.5+np.arange(0,ny))
+
+
+if crop_flag:
+
+    # Load the dem into a numpy array
+    arr_temp = np.flipud(np.loadtxt(source, skiprows=6))
+    # the values are associated to the center of the pixels
+    xc_temp = lx + cell*(0.5+np.arange(0,arr_temp.shape[1]))
+    yc_temp = ly + cell*(0.5+np.arange(0,arr_temp.shape[0]))
+
+    # crop the DEM to the desired domain
+    iW = (np.floor((np.min(x_vent)-west_to_vent-lx)/cell)).astype(int)
+    iE = (np.ceil((np.max(x_vent)+east_to_vent-lx)/cell)).astype(int)
+    jS = (np.floor((np.min(y_vent)-south_to_vent-ly)/cell)).astype(int)
+    jN = (np.ceil((np.max(y_vent)+north_to_vent-ly)/cell)).astype(int)
+
+
+    arr = arr_temp[jS:jN,iW:iE]
+    xc = xc_temp[iW:iE]
+    yc = yc_temp[jS:jN]
+
+    lx = xc[0] - 0.5*cell
+    ly = yc[0] - 0.5*cell
+
+    nx = arr.shape[1]
+    ny = arr.shape[0]
+
+    header = "ncols     %s\n" % arr.shape[1]
+    header += "nrows    %s\n" % arr.shape[0]
+    header += "xllcorner " + str(lx) +"\n"
+    header += "yllcorner " + str(ly) +"\n"
+    header += "cellsize " + str(cell) +"\n"
+    header += "NODATA_value " + str(nd) +"\n"
+
+    output_DEM = run_name + '_DEM.asc'
+
+    np.savetxt(output_DEM, np.flipud(arr), header=header, fmt='%1.5f',comments='')
+
+
+else:
+
+    # Load the dem into a numpy array
+    arr = np.flipud(np.loadtxt(source, skiprows=6))
+
+    nx = arr.shape[1]
+    ny = arr.shape[0]
+
+    # the values are associated to the center of the pixels
+    xc = lx + cell*(0.5+np.arange(0,nx))
+    yc = ly + cell*(0.5+np.arange(0,ny))
+
+
 
 xcmin = np.min(xc)
 xcmax = np.max(xc)
@@ -252,7 +300,8 @@ ycmax = np.max(yc)
 
 Xc,Yc = np.meshgrid(xc,yc)
 
-Zc = np.flipud(arr)
+Zc = np.zeros((ny,nx))
+np.copyto(Zc,arr)
 
 # load restart files (if existing) 
 for i_restart in range(0,len(restart_files)): 
@@ -264,7 +313,7 @@ for i_restart in range(0,len(restart_files)):
     # Load the previous flow thickness into a numpy array
     arr = np.loadtxt(source, skiprows=6)
 
-    Zflow_old = np.flipud(arr)
+    np.copyto(Zflow_old,arr)
     
     Zc = Zc + Zflow_old
 
@@ -303,8 +352,8 @@ max_semiaxis = np.sqrt( lobe_area * max_aspect_ratio / np.pi )
 max_cells = np.ceil( 2.0 * max_semiaxis / cell ) + 2
 max_cells = max_cells.astype(int)
 
-print ('max_semiaxis',max_semiaxis)
-print ('max_cells',max_cells)
+print ('Max semiaxis',max_semiaxis)
+print ('Max cells',max_cells)
 
 jtop_array = np.zeros(alloc_n_lobes, dtype=np.int)
 jbottom_array = np.zeros(alloc_n_lobes, dtype=np.int)
