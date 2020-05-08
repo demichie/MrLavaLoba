@@ -239,12 +239,26 @@ crop_flag = ( "west_to_vent" in locals() ) and ( "east_to_vent" in locals() ) \
 
 print('Crop flag = ',crop_flag)
 
+if sys.version_info >= (3, 0):
+    start = time.process_time()
+else:
+    start = time.clock()
 
+source_npy = source.replace(".asc",".npy")
+
+if os.path.isfile(source_npy):
+    print (source_npy," exists")
+else:
+    print (source_npy," does not exist")
+    data = np.loadtxt(source, skiprows=6)
+    np.save(source_npy, data)
+    
 
 if crop_flag:
 
     # Load the dem into a numpy array
-    arr_temp = np.flipud(np.loadtxt(source, skiprows=6))
+    arr_temp = np.flipud(np.load(source_npy))
+
     # the values are associated to the center of the pixels
     xc_temp = lx + cell*(0.5+np.arange(0,arr_temp.shape[1]))
     yc_temp = ly + cell*(0.5+np.arange(0,arr_temp.shape[0]))
@@ -255,7 +269,12 @@ if crop_flag:
     jS = (np.floor((np.min(y_vent)-south_to_vent-ly)/cell)).astype(int)
     jN = (np.ceil((np.max(y_vent)+north_to_vent-ly)/cell)).astype(int)
 
+    iW = np.maximum(iW,0)
+    iE = np.minimum(iE,arr_temp.shape[1])
 
+    jS = np.maximum(jS,0)
+    jN = np.minimum(jN,arr_temp.shape[0])
+    
     arr = arr_temp[jS:jN,iW:iE]
     xc = xc_temp[iW:iE]
     yc = yc_temp[jS:jN]
@@ -281,7 +300,7 @@ if crop_flag:
 else:
 
     # Load the dem into a numpy array
-    arr = np.flipud(np.loadtxt(source, skiprows=6))
+    arr = np.flipud(np.load(source_npy))
 
     nx = arr.shape[1]
     ny = arr.shape[0]
@@ -291,6 +310,12 @@ else:
     yc = ly + cell*(0.5+np.arange(0,ny))
 
 
+if sys.version_info >= (3, 0):
+    elapsed = (time.process_time() - start)
+else:
+    elapsed = (time.clock() - start)
+
+print('Time to read DEM '+str(elapsed)+'s')
 
 xcmin = np.min(xc)
 xcmax = np.max(xc)
