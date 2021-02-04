@@ -12,7 +12,7 @@ This code needs:
 
 - installation of matplotlib (https://matplotlib.org/) and numpy (http://www.numpy.org/);
 
-- the python script rtnorm.py, developed by C. Lassner (http://miv.u-strasbg.fr/mazet/rtnorm/) for the simulation of a Gaussian distribution defined on a finite interval;
+- the python script rtnorm.py, developed by C. Lassner (https://github.com/classner/py-rtnorm) for the simulation of a Gaussian distribution defined on a finite interval;
 
-- the script shapefile.py, developed by jlawhead<at>geospatialpython.com (https://github.com/GeospatialPython), which provides read and write support for ESRI Shapefiles.
+- the script shapefile.py, developed by jlawhead<at>geospatialpython.com (https://github.com/GeospatialPython/pyshp), which provides read and write support for ESRI Shapefiles.
 
