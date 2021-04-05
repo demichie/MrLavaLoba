@@ -4,6 +4,7 @@ run_name = 'example_run'
 # File name of ASCII digital elevation model
 source = "./DEM/topography.asc"
 
+
 # This flag select how multiple initial coordinates are treated:
 # vent_flag = 0  => the initial lobes are on the vents coordinates
 #                   and the flows start initially from the first vent,
@@ -16,12 +17,38 @@ source = "./DEM/topography.asc"
 # vent_flag = 3  => the initial lobes are on the polyline connecting
 #                   the vents and all the segments of the polyline
 #                   have the same probability
+# vent_flag = 4  => the initial lobes are on multiple
+#                   fissures and all the point of the fissures
+#                   have the same probability
+# vent_flag = 5  => the initial lobes are on multiple
+#                   fissures and all the fissures
+#                   have the same probability
+# vent_flag = 6  => the initial lobes are on the polyline connecting
+#                   the vents and the probability of
+#                   each segment is fixed by "fissure probabilities"
+# vent_flag = 7  => the initial lobes are on multiple
+#                   fissures and the probability of
+#                   each fissure is fixed by "fissure_probabilities"
 
 vent_flag = 1 
 
 #vent coordinates
 x_vent = [ 436358 ]
 y_vent = [ 326012 ]
+
+# this syntax define a fissure
+#x_vent = [ 332255 , 333694 ]
+#y_vent = [ 378125 , 379514 ]
+
+# this coordinates are used when multiple fissures are defined:
+# the first one goes from (x_vent[0],y_vent[0]) to (x_vent_end[0],y_vent_end[0])
+# the second one goes from (x_vent[1],y_vent[1]) to (x_vent_end[1],y_vent_end[1])
+#x_vent_end = [ 332755 , 334194 ]
+#y_vent_end = [ 378125 , 379514 ]
+
+# this values defines the probabilities of the different segments of the polyline 
+# or of the different fissures.
+#fissure_probabilities = [ 2 , 1 ]
 
 # If this flag is set to 1 then a raster map is saved where the values
 # represent the probability of a cell to be covered. 
