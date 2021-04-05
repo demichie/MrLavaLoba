@@ -105,10 +105,26 @@ n_vents = len(x_vent)
 
 cum_fiss_length = np.zeros(n_vents)
 
-for j in range(1,n_vents):
+if 'x_vent_end' in globals():
 
-    delta_xvent =  x_vent[j] - x_vent[j-1]
-    delta_yvent =  y_vent[j] - y_vent[j-1]
+    first_j = 0
+
+else:
+
+    first_j = 1
+
+
+for j in range(first_j,n_vents):
+
+    if 'x_vent_end' in globals():
+
+        delta_xvent = x_vent_end[j] - x_vent[j]
+        delta_yvent = y_vent_end[j] - y_vent[j]
+
+    else:
+
+        delta_xvent =  x_vent[j] - x_vent[j-1]
+        delta_yvent =  y_vent[j] - y_vent[j-1]
 
     cum_fiss_length[j] = cum_fiss_length[j-1] + np.sqrt( delta_xvent**2 + delta_yvent**2 )
 
@@ -481,6 +497,44 @@ for flow in range(0,n_flows):
 
                 y[i] = alfa_segment * y_vent[i_segment] + \
                        ( 1.0 - alfa_segment ) * y_vent[i_segment-1]
+
+            elif ( vent_flag == 4 ):
+
+                # vent_flag = 4  => the initial lobes are on multiple
+                #                   fissures and all the point of the fissures
+                #                   have the same probability
+
+                alfa_polyline = np.random.uniform(0, 1, size=1)
+
+                idx_vent = np.argmax(cum_fiss_length>alfa_polyline)
+
+                num = alfa_polyline - cum_fiss_length[idx_vent-1]
+                den = cum_fiss_length[idx_vent] - cum_fiss_length[idx_vent-1]
+
+                alfa_segment = num / den
+
+                x[i] = alfa_segment * x_vent_end[idx_vent] + \
+                       ( 1.0 - alfa_segment ) * x_vent[idx_vent] 
+
+                y[i] = alfa_segment * y_vent_end[idx_vent] + \
+                       ( 1.0 - alfa_segment ) * y_vent[idx_vent]
+            
+
+            elif ( vent_flag == 3 ):
+
+                # vent_flag = 3  => the initial lobes are on multiple
+                #                   fissures and all the fissures
+                #                   have the same probability
+
+                i_segment = np.random.randint(n_vents, size=1)
+            
+                alfa_segment = np.random.uniform(0, 1, size=1)
+            
+                x[i] = alfa_segment * x_vent_end[i_segment] + \
+                       ( 1.0 - alfa_segment ) * x_vent[i_segment] 
+
+                y[i] = alfa_segment * y_vent_end[i_segment] + \
+                       ( 1.0 - alfa_segment ) * y_vent[i_segment]
 
 
         # initialize distance from first lobe and number of descendents        
