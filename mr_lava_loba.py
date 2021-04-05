@@ -234,88 +234,15 @@ hdr = [getline(source, i) for i in range(1,7)]
 values = [float(h.split(" ")[-1].strip()) for h in hdr]
 cols,rows,lx,ly,cell,nd = values
 
-crop_flag = ( "west_to_vent" in locals() ) and ( "east_to_vent" in locals() ) \
-           and ( "south_to_vent" in locals() ) and ( "north_to_vent" in locals() )
+# Load the dem into a numpy array
+arr = np.loadtxt(source, skiprows=6)
 
-print('Crop flag = ',crop_flag)
+nx = arr.shape[1]
+ny = arr.shape[0]
 
-if sys.version_info >= (3, 0):
-    start = time.process_time()
-else:
-    start = time.clock()
-
-source_npy = source.replace(".asc",".npy")
-
-if os.path.isfile(source_npy):
-    print (source_npy," exists")
-else:
-    print (source_npy," does not exist")
-    data = np.loadtxt(source, skiprows=6)
-    np.save(source_npy, data)
-    
-
-if crop_flag:
-
-    # Load the dem into a numpy array
-    arr_temp = np.flipud(np.load(source_npy))
-
-    # the values are associated to the center of the pixels
-    xc_temp = lx + cell*(0.5+np.arange(0,arr_temp.shape[1]))
-    yc_temp = ly + cell*(0.5+np.arange(0,arr_temp.shape[0]))
-
-    # crop the DEM to the desired domain
-    iW = (np.floor((np.min(x_vent)-west_to_vent-lx)/cell)).astype(int)
-    iE = (np.ceil((np.max(x_vent)+east_to_vent-lx)/cell)).astype(int)
-    jS = (np.floor((np.min(y_vent)-south_to_vent-ly)/cell)).astype(int)
-    jN = (np.ceil((np.max(y_vent)+north_to_vent-ly)/cell)).astype(int)
-
-    iW = np.maximum(iW,0)
-    iE = np.minimum(iE,arr_temp.shape[1])
-
-    jS = np.maximum(jS,0)
-    jN = np.minimum(jN,arr_temp.shape[0])
-    
-    arr = arr_temp[jS:jN,iW:iE]
-    xc = xc_temp[iW:iE]
-    yc = yc_temp[jS:jN]
-
-    lx = xc[0] - 0.5*cell
-    ly = yc[0] - 0.5*cell
-
-    nx = arr.shape[1]
-    ny = arr.shape[0]
-
-    header = "ncols     %s\n" % arr.shape[1]
-    header += "nrows    %s\n" % arr.shape[0]
-    header += "xllcorner " + str(lx) +"\n"
-    header += "yllcorner " + str(ly) +"\n"
-    header += "cellsize " + str(cell) +"\n"
-    header += "NODATA_value " + str(nd) +"\n"
-
-    output_DEM = run_name + '_DEM.asc'
-
-    np.savetxt(output_DEM, np.flipud(arr), header=header, fmt='%1.5f',comments='')
-
-
-else:
-
-    # Load the dem into a numpy array
-    arr = np.flipud(np.load(source_npy))
-
-    nx = arr.shape[1]
-    ny = arr.shape[0]
-
-    # the values are associated to the center of the pixels
-    xc = lx + cell*(0.5+np.arange(0,nx))
-    yc = ly + cell*(0.5+np.arange(0,ny))
-
-
-if sys.version_info >= (3, 0):
-    elapsed = (time.process_time() - start)
-else:
-    elapsed = (time.clock() - start)
-
-print('Time to read DEM '+str(elapsed)+'s')
+# the values are associated to the center of the pixels
+xc = lx + cell*(0.5+np.arange(0,nx))
+yc = ly + cell*(0.5+np.arange(0,ny))
 
 xcmin = np.min(xc)
 xcmax = np.max(xc)
@@ -325,8 +252,7 @@ ycmax = np.max(yc)
 
 Xc,Yc = np.meshgrid(xc,yc)
 
-Zc = np.zeros((ny,nx))
-np.copyto(Zc,arr)
+Zc = np.flipud(arr)
 
 # load restart files (if existing) 
 for i_restart in range(0,len(restart_files)): 
@@ -338,9 +264,12 @@ for i_restart in range(0,len(restart_files)):
     # Load the previous flow thickness into a numpy array
     arr = np.loadtxt(source, skiprows=6)
 
-    np.copyto(Zflow_old,arr)
+    Zflow_old = np.flipud(arr)
+
+    # Load the relevant filling_parameter (to account for "subsurface flows")
+    filling_parameter_i = restart_filling_parameters[i_restart]
     
-    Zc = Zc + Zflow_old
+    Zc = Zc + (Zflow_old * filling_parameter_i)
 
 
 # Define a small grid for lobe-cells intersection
@@ -377,8 +306,8 @@ max_semiaxis = np.sqrt( lobe_area * max_aspect_ratio / np.pi )
 max_cells = np.ceil( 2.0 * max_semiaxis / cell ) + 2
 max_cells = max_cells.astype(int)
 
-print ('Max semiaxis',max_semiaxis)
-print ('Max cells',max_cells)
+print ('max_semiaxis',max_semiaxis)
+print ('max_cells',max_cells)
 
 jtop_array = np.zeros(alloc_n_lobes, dtype=np.int)
 jbottom_array = np.zeros(alloc_n_lobes, dtype=np.int)
@@ -1320,6 +1249,7 @@ if ( saveraster_flag == 1 ):
 
     np.savetxt(output_full, np.flipud(Zflow), header=header, fmt='%1.5f',comments='')
 
+
     print ('')
     print (output_full + ' saved')
 
@@ -1446,6 +1376,36 @@ if ( saveraster_flag == 1 ):
             print ('')
             print (output_haz_masked + ' saved')
 
+
+    # this is to save an additional output for the cumulative deposit, if restart_files is not empty
+    # load restart files (if existing) 
+    for i_restart in range(0,len(restart_files)): 
+
+        Zflow_old = np.zeros((ny,nx))
+
+        source = restart_files[i_restart]
+
+        # Load the previous flow thickness into a numpy array
+        arr = np.loadtxt(source, skiprows=6)
+
+        Zflow_old = np.flipud(arr)
+
+        Zflow = Zflow + Zflow_old
+
+    output_full = run_name + '_thickness_cumulative.asc'
+
+    np.savetxt(output_full, np.flipud(Zflow), header=header, fmt='%1.5f',comments='')
+
+    output_thickness_cumulative = run_name + '_thickness_cumulative.asc'
+
+    print ('')
+    print (output_thickness_cumulative + ' saved')
+
+
+
+
+
+    
     if ( plot_flow_flag ):
 
         print ("")
