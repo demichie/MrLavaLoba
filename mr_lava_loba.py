@@ -18,6 +18,7 @@ import sys
 import shutil
 import datetime
 import rtnorm
+from random import randrange
 
 
 def ellipse( xc , yc , ax1 , ax2 , angle , X_circle , Y_circle ):
@@ -103,16 +104,16 @@ filling_parameter = 1 - thickening_parameter
 
 n_vents = len(x_vent)
 
-cum_fiss_length = np.zeros(n_vents)
 
 if 'x_vent_end' in globals():
 
     first_j = 0
+    cum_fiss_length = np.zeros(n_vents+1)
 
 else:
 
     first_j = 1
-
+    cum_fiss_length = np.zeros(n_vents)
 
 for j in range(first_j,n_vents):
 
@@ -121,15 +122,26 @@ for j in range(first_j,n_vents):
         delta_xvent = x_vent_end[j] - x_vent[j]
         delta_yvent = y_vent_end[j] - y_vent[j]
 
+        cum_fiss_length[j+1] = cum_fiss_length[j] + np.sqrt( delta_xvent**2 + delta_yvent**2 )
+ 
     else:
 
         delta_xvent =  x_vent[j] - x_vent[j-1]
         delta_yvent =  y_vent[j] - y_vent[j-1]
 
-    cum_fiss_length[j] = cum_fiss_length[j-1] + np.sqrt( delta_xvent**2 + delta_yvent**2 )
+        cum_fiss_length[j] = cum_fiss_length[j-1] + np.sqrt( delta_xvent**2 + delta_yvent**2 )
+
+
+if 'fissure_probabilities' in globals():
+
+    cum_fiss_length[1:] = np.cumsum(fissure_probabilities)
+
 
 if ( n_vents >1 ):
-    cum_fiss_length = cum_fiss_length / cum_fiss_length[j]
+    cum_fiss_length = cum_fiss_length / cum_fiss_length[-1]
+
+
+print(cum_fiss_length)
 
 #search if another run with the same base name already exists
 i = 0
@@ -460,11 +472,15 @@ for flow in range(0,n_flows):
                 x[i] = x_vent[int(i_vent)]
                 y[i] = y_vent[int(i_vent)]
 
-            elif ( vent_flag == 2 ):
+            elif ( (vent_flag == 2) or (vent_flag==6) ):
 
                 # vent_flag = 2  => the initial lobes are on the polyline connecting
                 #                   the vents and all the point of the polyline
                 #                   have the same probability
+
+                # vent_flag = 6  => the initial lobes are on the polyline connecting
+                #                   the vents and the probability of
+                #                   each segment is fixed in the input file
 
                 alfa_polyline = np.random.uniform(0, 1, size=1)
 
@@ -488,7 +504,7 @@ for flow in range(0,n_flows):
                 #                   the vents and all the segments of the polyline
                 #                   have the same probability
 
-                i_segment = np.random.randint(n_vents-1, size=1)
+                i_segment = randrange(n_vents)
             
                 alfa_segment = np.random.uniform(0, 1, size=1)
             
@@ -498,11 +514,16 @@ for flow in range(0,n_flows):
                 y[i] = alfa_segment * y_vent[i_segment] + \
                        ( 1.0 - alfa_segment ) * y_vent[i_segment-1]
 
-            elif ( vent_flag == 4 ):
+            elif ( (vent_flag == 4) or (vent_flag == 7) ):
 
                 # vent_flag = 4  => the initial lobes are on multiple
                 #                   fissures and all the point of the fissures
                 #                   have the same probability
+
+                # vent_flag = 7  => the initial lobes are on multiple
+                #                   fissures and the probability of
+                #                   each fissure is fixed in the input file
+
 
                 alfa_polyline = np.random.uniform(0, 1, size=1)
 
@@ -513,29 +534,27 @@ for flow in range(0,n_flows):
 
                 alfa_segment = num / den
 
-                x[i] = alfa_segment * x_vent_end[idx_vent] + \
-                       ( 1.0 - alfa_segment ) * x_vent[idx_vent] 
+                x[i] = alfa_segment * x_vent_end[idx_vent-1] + \
+                       ( 1.0 - alfa_segment ) * x_vent[idx_vent-1] 
 
-                y[i] = alfa_segment * y_vent_end[idx_vent] + \
-                       ( 1.0 - alfa_segment ) * y_vent[idx_vent]
+                y[i] = alfa_segment * y_vent_end[idx_vent-1] + \
+                       ( 1.0 - alfa_segment ) * y_vent[idx_vent-1]
             
+            elif ( vent_flag == 5 ):
 
-            elif ( vent_flag == 3 ):
-
-                # vent_flag = 3  => the initial lobes are on multiple
+                # vent_flag = 5  => the initial lobes are on multiple
                 #                   fissures and all the fissures
                 #                   have the same probability
 
-                i_segment = np.random.randint(n_vents, size=1)
-            
+                i_segment = randrange(n_vents)
+
                 alfa_segment = np.random.uniform(0, 1, size=1)
-            
+
                 x[i] = alfa_segment * x_vent_end[i_segment] + \
                        ( 1.0 - alfa_segment ) * x_vent[i_segment] 
 
                 y[i] = alfa_segment * y_vent_end[i_segment] + \
                        ( 1.0 - alfa_segment ) * y_vent[i_segment]
-
 
         # initialize distance from first lobe and number of descendents        
         dist_int[i] = 0
