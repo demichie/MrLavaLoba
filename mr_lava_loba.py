@@ -105,7 +105,7 @@ filling_parameter = 1 - thickening_parameter
 n_vents = len(x_vent)
 
 
-if 'x_vent_end' in globals():
+if (('x_vent_end' in globals()) and (vent_flag > 3)):
 
     first_j = 0
     cum_fiss_length = np.zeros(n_vents+1)
@@ -117,7 +117,7 @@ else:
 
 for j in range(first_j,n_vents):
 
-    if 'x_vent_end' in globals():
+    if (('x_vent_end' in globals()) and (vent_flag > 3)):
 
         delta_xvent = x_vent_end[j] - x_vent[j]
         delta_yvent = y_vent_end[j] - y_vent[j]
@@ -131,8 +131,7 @@ for j in range(first_j,n_vents):
 
         cum_fiss_length[j] = cum_fiss_length[j-1] + np.sqrt( delta_xvent**2 + delta_yvent**2 )
 
-
-if 'fissure_probabilities' in globals():
+if (('fissure_probabilities' in globals()) and ( vent_flag > 5)):
 
     cum_fiss_length[1:] = np.cumsum(fissure_probabilities)
 
@@ -533,6 +532,8 @@ for flow in range(0,n_flows):
                 den = cum_fiss_length[idx_vent] - cum_fiss_length[idx_vent-1]
 
                 alfa_segment = num / den
+                print()
+                print(idx_vent-1,alfa_segment)
 
                 x[i] = alfa_segment * x_vent_end[idx_vent-1] + \
                        ( 1.0 - alfa_segment ) * x_vent[idx_vent-1] 
