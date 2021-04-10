@@ -29,6 +29,9 @@ source = "./DEM/topography.asc"
 # vent_flag = 7  => the initial lobes are on multiple
 #                   fissures and the probability of
 #                   each fissure is fixed by "fissure_probabilities"
+# vent_flag = 8  => the initial lobes are chosen randomly from the vents
+#                   coordinates and the probability of each vent 
+# 
 
 vent_flag = 1 
 

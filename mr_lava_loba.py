@@ -105,7 +105,7 @@ filling_parameter = 1 - thickening_parameter
 n_vents = len(x_vent)
 
 
-if (('x_vent_end' in globals()) and (vent_flag > 3)):
+if (('x_vent_end' in globals()) and (len(x_vent_end) > 0) and (vent_flag > 3)):
 
     first_j = 0
     cum_fiss_length = np.zeros(n_vents+1)
@@ -117,7 +117,7 @@ else:
 
 for j in range(first_j,n_vents):
 
-    if (('x_vent_end' in globals()) and (vent_flag > 3)):
+    if (('x_vent_end' in globals()) and (len(x_vent_end) > 0) and (vent_flag > 3)):
 
         delta_xvent = x_vent_end[j] - x_vent[j]
         delta_yvent = y_vent_end[j] - y_vent[j]
@@ -131,9 +131,15 @@ for j in range(first_j,n_vents):
 
         cum_fiss_length[j] = cum_fiss_length[j-1] + np.sqrt( delta_xvent**2 + delta_yvent**2 )
 
-if (('fissure_probabilities' in globals()) and ( vent_flag > 5)):
+if ('fissure_probabilities' in globals()):
 
-    cum_fiss_length[1:] = np.cumsum(fissure_probabilities)
+    if ( vent_flag == 8 ):
+
+        cum_fiss_length = np.cumsum(fissure_probabilities)
+
+    elif ( vent_flag > 5):
+
+        cum_fiss_length[1:] = np.cumsum(fissure_probabilities)
 
 
 if ( n_vents >1 ):
@@ -556,6 +562,18 @@ for flow in range(0,n_flows):
 
                 y[i] = alfa_segment * y_vent_end[i_segment] + \
                        ( 1.0 - alfa_segment ) * y_vent[i_segment]
+
+            elif ( vent_flag == 8 ):
+
+                # vent_flag = 1  => the initial lobes are chosen randomly from the vents
+                #                   coordinates and each vent has the same probability
+
+                alfa_vent = np.random.uniform(0, 1, size=1)
+                i_vent = np.argmax(cum_fiss_length>alfa_vent)
+
+                x[i] = x_vent[int(i_vent)]
+                y[i] = y_vent[int(i_vent)]
+
 
         # initialize distance from first lobe and number of descendents        
         dist_int[i] = 0
@@ -1391,8 +1409,8 @@ if ( saveraster_flag == 1 ):
 
     # np.savetxt(output_dist, np.flipud(Zdist), header=header, fmt='%4i',comments='')
 
-    print ('')
-    print (output_dist + ' saved')
+    # print ('')
+    # print (output_dist + ' saved')
 
     output_dist = run_name + '_dist_masked.asc'
 
@@ -1402,8 +1420,8 @@ if ( saveraster_flag == 1 ):
 
         # np.savetxt(output_dist, np.flipud(Zdist), header=header, fmt='%4i',comments='')
 
-        print ('')
-        print (output_dist + ' saved')
+        # print ('')
+        # print (output_dist + ' saved')
     
     if ( hazard_flag ):
 
@@ -1453,30 +1471,28 @@ if ( saveraster_flag == 1 ):
 
     # this is to save an additional output for the cumulative deposit, if restart_files is not empty
     # load restart files (if existing) 
-    for i_restart in range(0,len(restart_files)): 
+    if (len(restart_files) > 0):
+        for i_restart in range(0,len(restart_files)): 
 
-        Zflow_old = np.zeros((ny,nx))
+            Zflow_old = np.zeros((ny,nx))
 
-        source = restart_files[i_restart]
+            source = restart_files[i_restart]
 
-        # Load the previous flow thickness into a numpy array
-        arr = np.loadtxt(source, skiprows=6)
+            # Load the previous flow thickness into a numpy array
+            arr = np.loadtxt(source, skiprows=6)
 
-        Zflow_old = np.flipud(arr)
+            Zflow_old = np.flipud(arr)
 
-        Zflow = Zflow + Zflow_old
+            Zflow = Zflow + Zflow_old
 
-    output_full = run_name + '_thickness_cumulative.asc'
+        output_full = run_name + '_thickness_cumulative.asc'
 
-    np.savetxt(output_full, np.flipud(Zflow), header=header, fmt='%1.5f',comments='')
+        np.savetxt(output_full, np.flipud(Zflow), header=header, fmt='%1.5f',comments='')
 
-    output_thickness_cumulative = run_name + '_thickness_cumulative.asc'
+        output_thickness_cumulative = run_name + '_thickness_cumulative.asc'
 
-    print ('')
-    print (output_thickness_cumulative + ' saved')
-
-
-
+        print ('')
+        print (output_thickness_cumulative + ' saved')
 
 
     
