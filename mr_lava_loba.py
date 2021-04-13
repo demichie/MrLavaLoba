@@ -143,7 +143,7 @@ if ('fissure_probabilities' in globals()):
 
 
 if ( n_vents >1 ):
-    cum_fiss_length = cum_fiss_length / cum_fiss_length[-1]
+    cum_fiss_length = cum_fiss_length.astype(float) / cum_fiss_length[-1]
 
 
 print(cum_fiss_length)
@@ -570,6 +570,7 @@ for flow in range(0,n_flows):
 
                 alfa_vent = np.random.uniform(0, 1, size=1)
                 i_vent = np.argmax(cum_fiss_length>alfa_vent)
+
 
                 x[i] = x_vent[int(i_vent)]
                 y[i] = y_vent[int(i_vent)]
