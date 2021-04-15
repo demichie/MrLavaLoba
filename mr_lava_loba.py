@@ -215,7 +215,7 @@ else:
 
     beta_pdf = beta.pdf( x_beta , a_beta , b_beta )
 
-    alloc_n_lobes = np.int( np.rint( min_n_lobes + 0.5 * ( max_n_lobes - min_n_lobes) \
+    alloc_n_lobes = int( np.rint( min_n_lobes + 0.5 * ( max_n_lobes - min_n_lobes) \
                                  * np.max( beta_pdf ) ) )
 
     print ('Flow with the maximum number of lobes',np.argmax( beta_pdf))
@@ -231,9 +231,9 @@ x1 = np.zeros(alloc_n_lobes)
 x2 = np.zeros(alloc_n_lobes)
 h = np.zeros(alloc_n_lobes)
 
-dist_int = np.zeros(alloc_n_lobes, dtype=np.int)-1
-descendents = np.zeros(alloc_n_lobes, dtype=np.int)
-parent = np.zeros(alloc_n_lobes, dtype=np.int)
+dist_int = np.zeros(alloc_n_lobes, dtype=int)-1
+descendents = np.zeros(alloc_n_lobes, dtype=int)
+parent = np.zeros(alloc_n_lobes, dtype=int)
 alfa_inertial = np.zeros(alloc_n_lobes)
 
 if ( volume_flag == 1 ):
@@ -342,17 +342,17 @@ max_cells = max_cells.astype(int)
 print ('max_semiaxis',max_semiaxis)
 print ('max_cells',max_cells)
 
-jtop_array = np.zeros(alloc_n_lobes, dtype=np.int)
-jbottom_array = np.zeros(alloc_n_lobes, dtype=np.int)
+jtop_array = np.zeros(alloc_n_lobes, dtype=int)
+jbottom_array = np.zeros(alloc_n_lobes, dtype=int)
 
-iright_array = np.zeros(alloc_n_lobes, dtype=np.int)
-ileft_array =np.zeros(alloc_n_lobes, dtype=np.int)
+iright_array = np.zeros(alloc_n_lobes, dtype=int)
+ileft_array =np.zeros(alloc_n_lobes, dtype=int)
 
 
-Zhazard = np.zeros((ny,nx), dtype=np.int)
-Zhazard_temp = np.zeros((ny,nx), dtype=np.int)
+Zhazard = np.zeros((ny,nx), dtype=int)
+Zhazard_temp = np.zeros((ny,nx), dtype=int)
 
-Zdist = np.zeros((ny,nx),dtype=np.int) + 9999
+Zdist = np.zeros((ny,nx),dtype=int) + 9999
  
 if ( saveshape_flag ):
     
@@ -388,8 +388,8 @@ n_lobes_tot = 0
 
 for flow in range(0,n_flows):
 
-    Zflow_local_array = np.zeros((alloc_n_lobes,max_cells,max_cells),dtype=np.int)
-    descendents = np.zeros(alloc_n_lobes, dtype=np.int)
+    Zflow_local_array = np.zeros((alloc_n_lobes,max_cells,max_cells),dtype=int)
+    descendents = np.zeros(alloc_n_lobes, dtype=int)
 
     i_first_check = n_check_loop
 
@@ -399,12 +399,12 @@ for flow in range(0,n_flows):
     if ( a_beta == 0 ) and ( b_beta == 0 ):
         
         # DEFINE THE NUMBER OF LOBES OF THE FLOW (RANDOM VALUE BETWEEN MIN AND MAX)
-        n_lobes = np.int( np.ceil( np.random.uniform(min_n_lobes, max_n_lobes, size=1) ) )
+        n_lobes = int( np.ceil( np.random.uniform(min_n_lobes, max_n_lobes, size=1) ) )
 
     else:
 
         x_beta = ( 1.0 * flow ) / ( n_flows - 1 )
-        n_lobes = np.int( np.rint( min_n_lobes + 0.5 * ( max_n_lobes - min_n_lobes ) \
+        n_lobes = int( np.rint( min_n_lobes + 0.5 * ( max_n_lobes - min_n_lobes ) \
                                    * beta.pdf( x_beta , a_beta , b_beta ) ) )
 
     n_lobes_tot = n_lobes_tot + n_lobes
@@ -462,7 +462,7 @@ for flow in range(0,n_flows):
                 #                   and the flows start initially from the first vent,
                 #                   then from the second and so on.
 
-                i_vent = np.int(np.floor( flow * n_vents / n_flows ) )
+                i_vent = int(np.floor( flow * n_vents / n_flows ) )
 
                 x[i] = x_vent[i_vent]
                 y[i] = y_vent[i_vent]
@@ -778,7 +778,7 @@ for flow in range(0,n_flows):
 
                 idx3 = np.floor( idx2 )
             
-                idx = np.int(idx3)
+                idx = int(idx3)
 
                 sorted_dist = np.argsort(dist_int[0:i])
                     
@@ -792,7 +792,7 @@ for flow in range(0,n_flows):
             
                 idx3 = np.floor( idx2 )
             
-                idx = np.int(idx3)
+                idx = int(idx3)
             
             if ( start_from_dist_flag ):
                 
@@ -1246,8 +1246,8 @@ for flow in range(0,n_flows):
                 i_left_int = np.maximum( i_left , ileft_array[parent[i]] )
                 i_right_int = np.minimum( i_right , iright_array[parent[i]] )
                       
-                Zlocal_new = np.zeros((max_cells,max_cells),dtype=np.int)
-                Zlocal_parent = np.zeros((max_cells,max_cells),dtype=np.int)
+                Zlocal_new = np.zeros((max_cells,max_cells),dtype=int)
+                Zlocal_parent = np.zeros((max_cells,max_cells),dtype=int)
 
 
                 Zlocal_parent = Zflow_local_array[parent[i],np.maximum(0,j_bottom_int-jbottom_array[parent[i]]): \
@@ -1314,7 +1314,7 @@ else:
 
 print ('')
 print ('')
-print ('Total number of lobes',n_lobes_tot,'Average number of lobes',np.int(1.0*n_lobes_tot/n_flows))
+print ('Total number of lobes',n_lobes_tot,'Average number of lobes',int(1.0*n_lobes_tot/n_flows))
 print ('')
 print ('Time elapsed ' + str(elapsed) + ' sec.')
 print ('')
@@ -1348,7 +1348,7 @@ if ( saveraster_flag == 1 ):
 
     if ( masking_threshold < 1):
 
-        max_lobes = np.int(np.floor(np.max(Zflow/avg_lobe_thickness)))
+        max_lobes = int(np.floor(np.max(Zflow/avg_lobe_thickness)))
 
         for i in range(1,10*max_lobes):
 
@@ -1435,7 +1435,7 @@ if ( saveraster_flag == 1 ):
 
         if ( masking_threshold < 1):
 
-            max_Zhazard = np.int(np.floor(np.max(Zhazard)))
+            max_Zhazard = int(np.floor(np.max(Zhazard)))
 
             total_Zflow = np.sum(Zflow)
 
