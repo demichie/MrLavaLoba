@@ -293,9 +293,13 @@ for i_restart in range(0,len(restart_files)):
     Zflow_old = np.zeros((ny,nx))
 
     source = restart_files[i_restart]
+    hdr = [getline(source, i) for i in range(1,7)]
+    values = [float(h.split(" ")[-1].strip()) for h in hdr]
+    cols,rows,lx,ly,cell,nd = values    
 
     # Load the previous flow thickness into a numpy array
     arr = np.loadtxt(source, skiprows=6)
+    arr[arr==nd] = 0.0
 
     Zflow_old = np.flipud(arr)
 
@@ -928,7 +932,7 @@ for flow in range(0,n_flows):
             if ( slopedeg > 0.0 ) and ( max_slope_prob > 0.0 ):
 
                 sigma = (1.0 - max_slope_prob ) / max_slope_prob * ( 90.0 - slopedeg ) / slopedeg
-                rand_angle_new = rtnorm.rtnorm(-180,180,0,sigma)
+                rand_angle_new = rtnorm.rtnorm(-180.0,180.0,0.0,sigma)
 
             else:
 
