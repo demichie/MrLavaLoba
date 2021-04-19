@@ -1483,8 +1483,13 @@ if ( saveraster_flag == 1 ):
 
             source = restart_files[i_restart]
 
+            hdr = [getline(source, i) for i in range(1,7)]
+            values = [float(h.split(" ")[-1].strip()) for h in hdr]
+            cols,rows,lx,ly,cell,nd = values    
+
             # Load the previous flow thickness into a numpy array
             arr = np.loadtxt(source, skiprows=6)
+            arr[arr==nd] = 0.0
 
             Zflow_old = np.flipud(arr)
 
