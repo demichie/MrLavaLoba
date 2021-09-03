@@ -146,7 +146,7 @@ if ( n_vents >1 ):
     cum_fiss_length = cum_fiss_length.astype(float) / cum_fiss_length[-1]
 
 
-print(cum_fiss_length)
+# print(cum_fiss_length)
 
 #search if another run with the same base name already exists
 i = 0
@@ -1350,68 +1350,83 @@ if ( saveraster_flag == 1 ):
     print ('')
     print (output_full + ' saved')
 
-    if ( masking_threshold < 1):
+    if isinstance(masking_threshold,float):
+    
+        masking_threshold = [masking_threshold]
 
-        max_lobes = int(np.floor(np.max(Zflow/avg_lobe_thickness)))
+    n_masking = len(masking_threshold)
 
-        for i in range(1,10*max_lobes):
+    for i_thr in range(n_masking):
 
-            masked_Zflow = ma.masked_where(Zflow < i*0.1*avg_lobe_thickness, Zflow)
+        if ( masking_threshold[i_thr] < 1):
 
-            total_Zflow = np.sum(Zflow)
+            max_lobes = int(np.floor(np.max(Zflow/avg_lobe_thickness)))
 
-            if ( flag_threshold == 1 ):
+            for i in range(1,10*max_lobes):
 
-                volume_fraction = np.sum( masked_Zflow ) / total_Zflow
+                masked_Zflow = ma.masked_where(Zflow < i*0.1*avg_lobe_thickness, Zflow)
 
-                coverage_fraction = volume_fraction
-
-            else:
-
-                area_fraction = np.true_divide( np.sum( masked_Zflow > 0 ) , \
-                                                    np.sum( Zflow >0 ) )
-
-                coverage_fraction = area_fraction
-                #print (coverage_fraction)
-                
-
-            if ( coverage_fraction < masking_threshold ): 
+                total_Zflow = np.sum(Zflow)
 
                 if ( flag_threshold == 1 ):
+
+                    volume_fraction = np.sum( masked_Zflow ) / total_Zflow
+
+                    coverage_fraction = volume_fraction
+
+                else:
+
+                    area_fraction = np.true_divide( np.sum( masked_Zflow > 0 ) , \
+                                                        np.sum( Zflow >0 ) )
+
+                    coverage_fraction = area_fraction
+                    #print (coverage_fraction)
                 
-                    print('')
-                    print ('Total volume',cell**2*total_Zflow, \
-                           ' m3 Masked volume',cell**2*np.sum( masked_Zflow ), \
-                           ' m3 Volume fraction',coverage_fraction)
-                    print ('Total area',cell**2*np.sum( Zflow >0 ), \
-                           ' m2 Masked area',cell**2*np.sum( masked_Zflow >0 ),' m2')
-                    print ('Average thickness full',total_Zflow/np.sum( Zflow >0 ), \
-                           ' m Average thickness mask',np.sum( masked_Zflow )/ np.sum( masked_Zflow >0 ),' m')
 
-                output_thickness = run_name + '_avg_thick.txt'
-                with open(output_thickness, 'a') as the_file:
-                    the_file.write('Average lobe thickness = '+str(avg_lobe_thickness)+' m\n')
-                    the_file.write('Total volume = '+str(cell**2*total_Zflow)+' m3\n')
-                    the_file.write('Masked volume = '+str(cell**2*np.sum( masked_Zflow ))+' m3\n')
-                    the_file.write('Total area = '+str(cell**2*np.sum( Zflow >0 ))+' m2\n')
-                    the_file.write('Masked area = '+str(cell**2*np.sum( masked_Zflow >0 ))+' m2\n')
-                    the_file.write('Average thickness full = '+str(total_Zflow/np.sum( Zflow >0 ))+' m\n')
-                    the_file.write('Average thickness mask = '+str(np.sum( masked_Zflow )/ np.sum( masked_Zflow >0 ))+' m\n')
+                if ( coverage_fraction < masking_threshold[i_thr] ): 
 
-                output_masked = run_name + '_thickness_masked.asc'
+                    if ( flag_threshold == 1 ):
+                
+                        print('')
+                        print ('Masking threshold',masking_threshold[i_thr])
+                        print ('Total volume',cell**2*total_Zflow, \
+                               ' m3 Masked volume',cell**2*np.sum( masked_Zflow ), \
+                               ' m3 Volume fraction',coverage_fraction)
+                        print ('Total area',cell**2*np.sum( Zflow >0 ), \
+                               ' m2 Masked area',cell**2*np.sum( masked_Zflow >0 ),' m2')
+                        print ('Average thickness full',total_Zflow/np.sum( Zflow >0 ), \
+                               ' m Average thickness mask',np.sum( masked_Zflow )/ np.sum( masked_Zflow >0 ),' m')
 
-                np.savetxt(output_masked, np.flipud((1-masked_Zflow.mask)*Zflow), \
-                           header=header, fmt='%1.5f',comments='')
+                    output_thickness = run_name + '_avg_thick.txt'
+                    with open(output_thickness, 'a') as the_file:
+                    
+                        if (i_thr == 0):
+                            the_file.write('Average lobe thickness = '+str(avg_lobe_thickness)+' m\n')
+                            the_file.write('Total volume = '+str(cell**2*total_Zflow)+' m3\n')
+                            the_file.write('Total area = '+str(cell**2*np.sum( Zflow >0 ))+' m2\n')
+                            the_file.write('Average thickness full = '+str(total_Zflow/np.sum( Zflow >0 ))+' m\n')
 
-                print ('')
-                print (output_masked + ' saved')
+                        the_file.write('Masking threshold = '+str(masking_threshold[i_thr])+'\n')
+                        the_file.write('Masked volume = '+str(cell**2*np.sum( masked_Zflow ))+' m3\n')
+                        the_file.write('Masked area = '+str(cell**2*np.sum( masked_Zflow >0 ))+' m2\n')
+                        the_file.write('Average thickness mask = '+str(np.sum( masked_Zflow )/ np.sum( masked_Zflow >0 ))+' m\n')
 
-                break
+                    
+
+                    output_masked = run_name + '_thickness_masked' + '_' + str(masking_threshold[i_thr]).replace('.','_') + '.asc'
+
+                    np.savetxt(output_masked, np.flipud((1-masked_Zflow.mask)*Zflow), \
+                               header=header, fmt='%1.5f',comments='')
+
+                    print ('')
+                    print (output_masked + ' saved')
+
+                    break
 
     output_dist = run_name + '_dist_full.asc'
     
     # ST skipped this (and conjugated masked) to save up disk space (poorly used so far):
-
+    """
     # np.savetxt(output_dist, np.flipud(Zdist), header=header, fmt='%4i',comments='')
 
     # print ('')
@@ -1428,6 +1443,8 @@ if ( saveraster_flag == 1 ):
         # print ('')
         # print (output_dist + ' saved')
     
+    """
+    
     if ( hazard_flag ):
 
         output_haz = run_name + '_hazard_full.asc'
@@ -1437,41 +1454,43 @@ if ( saveraster_flag == 1 ):
         print ('')
         print (output_haz + ' saved')
 
-        if ( masking_threshold < 1):
+        for i_thr in range(n_masking):
 
-            max_Zhazard = int(np.floor(np.max(Zhazard)))
+            if ( masking_threshold[i_thr] < 1):
 
-            total_Zflow = np.sum(Zflow)
+                max_Zhazard = int(np.floor(np.max(Zhazard)))
 
-            # for i in range(1,max_Zhazard):
-            for i in np.unique(Zhazard):
+                total_Zflow = np.sum(Zflow)
 
-                masked_Zflow = ma.masked_where(Zhazard < i, Zflow)
+                # for i in range(1,max_Zhazard):
+                for i in np.unique(Zhazard):
 
-                if ( flag_threshold == 1 ):
+                    masked_Zflow = ma.masked_where(Zhazard < i, Zflow)
 
-                    volume_fraction = np.sum( masked_Zflow ) / total_Zflow
+                    if ( flag_threshold == 1 ):
 
-                    coverage_fraction = volume_fraction
+                        volume_fraction = np.sum( masked_Zflow ) / total_Zflow
 
-                else:
+                        coverage_fraction = volume_fraction
 
-                    area_fraction = np.true_divide( np.sum( masked_Zflow > 0 ) , \
-                                                    np.sum( Zflow >0 ) )
+                    else:
 
-                    coverage_fraction = area_fraction
+                        area_fraction = np.true_divide( np.sum( masked_Zflow > 0 ) , \
+                                                        np.sum( Zflow >0 ) )
 
-                if ( coverage_fraction < masking_threshold ): 
+                        coverage_fraction = area_fraction
 
-                    break
+                    if ( coverage_fraction < masking_threshold ): 
 
-            output_haz_masked = run_name + '_hazard_masked.asc'
+                        break
 
-            np.savetxt(output_haz_masked, np.flipud((1-masked_Zflow.mask)*Zhazard), \
-                       header=header, fmt='%1.5f',comments='')
+                output_haz_masked = run_name + '_hazard_masked' + '_' + str(masking_threshold[i_thr]).replace('.','_') + '.asc'
 
-            print ('')
-            print (output_haz_masked + ' saved')
+                np.savetxt(output_haz_masked, np.flipud((1-masked_Zflow.mask)*Zhazard), \
+                           header=header, fmt='%1.5f',comments='')
+
+                print ('')
+                print (output_haz_masked + ' saved')
 
 
     # this is to save an additional output for the cumulative deposit, if restart_files is not empty
