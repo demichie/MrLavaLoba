@@ -4,6 +4,13 @@ run_name = 'example_run'
 # File name of ASCII digital elevation model
 source = "./DEM/topography.asc"
 
+# Parameters to crop the DEM file. This reduces the computational
+# time when the DEM is large and the area covered by the flow
+# is a lot smaller. Remove comments to activate the crop
+# east_to_vent = 10000.0
+# west_to_vent = 10000.0
+# south_to_vent = 10000.0
+# north_to_vent = 10000.0
 
 # This flag select how multiple initial coordinates are treated:
 # vent_flag = 0  => the initial lobes are on the vents coordinates
