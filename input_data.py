@@ -110,22 +110,6 @@ avg_lobe_thickness = 0.07
 # thickness_ratio > 1   => the thickness decreases with lobe "age"
 thickness_ratio = 2
 
-# This flag controls if the topography is modified by the lobes and if the
-# emplacement of new flows is affected by the changed slope
-# topo_mod_flag = 0   => the slope does not changes
-# topo_mod_flag = 1   => the slope is re-evaluated every n_flows_counter flows
-# topo_mod_flag = 2   => the slope is re-evaluated every n_lobes_counter flows
-#                        and every n_flows_counter flows
-topo_mod_flag = 1
-
-# This parameter is only effective when topo_mod_flag = 1 and defines the
-# number of flows for the re-evaluation of the slope modified by the flow
-n_flows_counter = 1
-
-# This parameter is only effective when topo_mod_flag = 2 and defines the
-# number of lobes for the re-evaluation of the slope modified by the flow
-#n_lobes_counter = 500
-
 # This parameter (between 0 and 1) allows for a thickening of the flow giving
 # controlling the modification of the slope due to the presence of the flow.
 # thickening_parameter = 0  => minimum thickening (maximum spreading)
@@ -147,7 +131,6 @@ thickening_parameter = 0.7
 #			generated. 
 # lobe_exponent = 0  => the new lobe is generated from the last one.
 lobe_exponent = 0.1
-
 
 # max_slope_prob is related to the probability that the direction of 
 # the new lobe is close to the maximum slope direction:
