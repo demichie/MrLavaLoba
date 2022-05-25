@@ -1,13 +1,13 @@
 # from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
+# from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
 import numpy as np
 from linecache import getline
 from scipy.stats import beta
 from matplotlib.patches import Ellipse
-from matplotlib.path import Path
-import matplotlib.patches as patches
+# from matplotlib.path import Path
+# import matplotlib.patches as patches
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 import shapefile
@@ -22,6 +22,24 @@ from random import randrange
 from os.path import exists
 import gc
 
+from input_data_advanced import *
+from input_data import *
+
+from numba import jit
+import math
+
+# Creates and returns and Ellipse
+def add_Ellipse(ep):
+    # == 2 is for the ellipses with edgecolor = 'r'
+    if (ep[5] == 2):
+        ellip = Ellipse([ep[0],ep[1]], 2*ep[2],2*ep[3], ep[4], facecolor = 'none',edgecolor='r')
+    else: 
+        ellip = Ellipse([ep[0],ep[1]], 2*ep[2],2*ep[3], ep[4], facecolor = 'none',edgecolor='k')     
+
+    return ellip
+
+'''ELLIPSE WITH JIT ONLY START '''
+@jit(nopython=True)
 def ellipse( xc , yc , ax1 , ax2 , angle , X_circle , Y_circle ):
 
     cos_angle = np.cos(angle*np.pi/180)
@@ -40,6 +58,28 @@ def ellipse( xc , yc , ax1 , ax2 , angle , X_circle , Y_circle ):
     ye = yc + X*sin_angle + Y*cos_angle
 
     return (xe,ye)
+'''ELLIPSE WITH JIT ONLY END '''
+
+'''ORIGINAL ELLIPSE START '''
+# def ellipse( xc , yc , ax1 , ax2 , angle , X_circle , Y_circle ):
+
+#     cos_angle = np.cos(angle*np.pi/180)
+#     sin_angle = np.sin(angle*np.pi/180)
+
+#     # x1 = xc + ax1 * cos_angle
+#     # y1 = yc + ax1 * sin_angle
+
+#     # x2 = xc - ax2 * sin_angle
+#     # y2 = yc + ax2 * cos_angle
+
+#     X = ax1 * X_circle
+#     Y = ax2 * Y_circle
+
+#     xe = xc + X*cos_angle - Y*sin_angle
+#     ye = yc + X*sin_angle + Y*cos_angle
+
+#     return (xe,ye)
+'''ORIGINAL ELLIPSE END '''
 
 def local_intersection(Xc_local,Yc_local,xc_e,yc_e,ax1,ax2,angle,xv,yv,nv2):
 
@@ -90,16 +130,15 @@ def local_intersection(Xc_local,Yc_local,xc_e,yc_e,ax1,ax2,angle,xv,yv,nv2):
     
     return (area_fract)
 
+
 # Main start here
 
 print ("")
 print ("Mr Lava Loba by M.de' Michieli Vitturi and S.Tarquini")
 print ("")
 
-# read the run parameters form the file inpot_data.py
 
-from input_data_advanced import *
-from input_data import *
+# read the run parameters form the file inpot_data.py
 
 filling_parameter = 1.0 - thickening_parameter
 
@@ -124,7 +163,7 @@ for j in range(first_j,n_vents):
         delta_yvent = y_vent_end[j] - y_vent[j]
 
         cum_fiss_length[j+1] = cum_fiss_length[j] + np.sqrt( delta_xvent**2 + delta_yvent**2 )
- 
+
     else:
 
         delta_xvent =  x_vent[j] - x_vent[j-1]
@@ -157,7 +196,7 @@ condition = True
 base_name = run_name
 
 while condition:
-	
+    
     run_name = base_name + '_{0:03}'.format(i) 
 
     backup_advanced_file = run_name + '_advanced_inp.bak'
@@ -199,7 +238,7 @@ if ( len(shape_name) > 0 ):
         par     = list(prt) + [pts.shape[0]]
 
         for pij in xrange(len(prt)):
-        	ptchs.append(Polygon(pts[par[pij]:par[pij+1]]))
+            ptchs.append(Polygon(pts[par[pij]:par[pij+1]]))
     
         ax.add_collection(PatchCollection(ptchs,facecolor=cccol[nshp,:],edgecolor='k', linewidths=.1))
 
@@ -217,7 +256,7 @@ else:
     beta_pdf = beta.pdf( x_beta , a_beta , b_beta )
 
     alloc_n_lobes = int( np.rint( min_n_lobes + 0.5 * ( max_n_lobes - min_n_lobes) \
-                                 * np.max( beta_pdf ) ) )
+                                * np.max( beta_pdf ) ) )
 
     print ('Flow with the maximum number of lobes',np.argmax( beta_pdf))
 
@@ -240,7 +279,7 @@ alfa_inertial = np.zeros(alloc_n_lobes)
 if ( volume_flag == 1 ):
 
     if ( fixed_dimension_flag == 1 ):
-
+        print("total_volume", total_volume, "n_flows", n_flows, "lobe_area", lobe_area, "min_n_lobes", min_n_lobes, "max_n_lobes", max_n_lobes)
         avg_lobe_thickness = total_volume / ( n_flows * lobe_area * 0.5 * ( min_n_lobes + max_n_lobes ) )    
         sys.stdout.write("Average Lobe thickness = %f m\n\n" % (avg_lobe_thickness))
 
@@ -274,7 +313,7 @@ cols = int(cols)
 rows = int(rows)
 
 crop_flag = ( "west_to_vent" in locals() ) and ( "east_to_vent" in locals() ) \
-           and ( "south_to_vent" in locals() ) and ( "north_to_vent" in locals() )
+        and ( "south_to_vent" in locals() ) and ( "north_to_vent" in locals() )
 
 print('Crop flag = ',crop_flag)
 
@@ -429,7 +468,7 @@ Ztot = np.zeros((ny,nx))
 
 # the first argument is the destination, the second is the source
 np.copyto(Ztot,Zc)
-	
+    
 Zflow = np.zeros((ny,nx))
 
 max_semiaxis = np.sqrt( lobe_area * max_aspect_ratio / np.pi )
@@ -450,7 +489,7 @@ Zhazard = np.zeros((ny,nx), dtype=int)
 Zhazard_temp = np.zeros((ny,nx), dtype=int)
 
 Zdist = np.zeros((ny,nx),dtype=int) + 9999
- 
+
 if ( saveshape_flag ):
     
     # create the Polygon shapefile
@@ -481,6 +520,13 @@ est_rem_time = ''
 
 n_lobes_tot = 0
 
+
+''' THESE 3 LISTS ARE ONLY REQUIRED FOR THE PARALLEL VERSION OF ELLIPSE CREATION (refer to README.md for more info)'''
+
+to_plot_centers = []
+to_ellipse_patch = []
+to_ellipse_patch2 = []
+
 for flow in range(0,n_flows):
 
     Zflow_local_array = np.zeros((alloc_n_lobes,max_cells,max_cells),dtype=int)
@@ -491,13 +537,13 @@ for flow in range(0,n_flows):
     if ( a_beta == 0 ) and ( b_beta == 0 ):
         
         # DEFINE THE NUMBER OF LOBES OF THE FLOW (RANDOM VALUE BETWEEN MIN AND MAX)
-        n_lobes = int( np.ceil( np.random.uniform(min_n_lobes, max_n_lobes, size=1) ) )
+        n_lobes = int( np.ceil( np.random.uniform(min_n_lobes, max_n_lobes, size=1) ))
 
     else:
 
         x_beta = ( 1.0 * flow ) / ( n_flows - 1 )
         n_lobes = int( np.rint( min_n_lobes + 0.5 * ( max_n_lobes - min_n_lobes ) \
-                                   * beta.pdf( x_beta , a_beta , b_beta ) ) )
+                                * beta.pdf( x_beta , a_beta , b_beta ) ) )
 
     n_lobes_tot = n_lobes_tot + n_lobes
 
@@ -508,7 +554,7 @@ for flow in range(0,n_flows):
     # print ('thickness_min',thickness_min)
     # print ('delta_lobe_thickness',delta_lobe_thickness)
 
-    if ( n_flows > 1):
+    if ( n_flows > 1 and not ('SLURM_JOB_NAME' in os.environ.keys())):
         # print on screen bar with percentage of flows computed
         last_percentage_5 = np.rint(flow*20.0/(n_flows)).astype(int)
         last_percentage = np.rint(flow*100.0/(n_flows))
@@ -517,10 +563,10 @@ for flow in range(0,n_flows):
         sys.stdout.write('\r')
         sys.stdout.write("[%-20s] %d%% %s" % ('='*(last_percentage_5), last_percentage, est_rem_time))
         sys.stdout.flush()
-        
+    
     for i in range(0,n_init):
 
-        if ( n_flows == 1 ):
+        if ( n_flows == 1 and not ('SLURM_JOB_NAME' in os.environ.keys())):
             # print on screen bar with percentage of flows computed
             last_percentage = np.rint(i*20.0/(n_lobes-1))*5
             last_percentage = last_percentage.astype(int)
@@ -528,14 +574,16 @@ for flow in range(0,n_flows):
             sys.stdout.write('\r')
             sys.stdout.write("[%-20s] %d%%" % ('='*(last_percentage/5), last_percentage))
             sys.stdout.flush()
+        else:
+            pass
 
         # STEP 0: COMPUTE THE FIRST LOBES OF EACH FLOW
-      
+    
         if ( n_vents == 1 ):
 
             x[i] = x_vent[0]
             y[i] = y_vent[0]
- 
+
         else:
 
             if ( vent_flag == 0 ):
@@ -579,10 +627,10 @@ for flow in range(0,n_flows):
                 alfa_segment = num / den
 
                 x[i] = alfa_segment * x_vent[idx_vent] + \
-                       ( 1.0 - alfa_segment ) * x_vent[idx_vent-1] 
+                    ( 1.0 - alfa_segment ) * x_vent[idx_vent-1] 
 
                 y[i] = alfa_segment * y_vent[idx_vent] + \
-                       ( 1.0 - alfa_segment ) * y_vent[idx_vent-1]
+                    ( 1.0 - alfa_segment ) * y_vent[idx_vent-1]
             
 
             elif ( vent_flag == 3 ):
@@ -596,10 +644,10 @@ for flow in range(0,n_flows):
                 alfa_segment = np.random.uniform(0, 1, size=1)
             
                 x[i] = alfa_segment * x_vent[i_segment] + \
-                       ( 1.0 - alfa_segment ) * x_vent[i_segment-1] 
+                    ( 1.0 - alfa_segment ) * x_vent[i_segment-1] 
 
                 y[i] = alfa_segment * y_vent[i_segment] + \
-                       ( 1.0 - alfa_segment ) * y_vent[i_segment-1]
+                    ( 1.0 - alfa_segment ) * y_vent[i_segment-1]
 
             elif ( (vent_flag == 4) or (vent_flag == 7) ):
 
@@ -624,10 +672,10 @@ for flow in range(0,n_flows):
                 print(idx_vent-1,alfa_segment)
 
                 x[i] = alfa_segment * x_vent_end[idx_vent-1] + \
-                       ( 1.0 - alfa_segment ) * x_vent[idx_vent-1] 
+                    ( 1.0 - alfa_segment ) * x_vent[idx_vent-1] 
 
                 y[i] = alfa_segment * y_vent_end[idx_vent-1] + \
-                       ( 1.0 - alfa_segment ) * y_vent[idx_vent-1]
+                    ( 1.0 - alfa_segment ) * y_vent[idx_vent-1]
             
             elif ( vent_flag == 5 ):
 
@@ -640,10 +688,10 @@ for flow in range(0,n_flows):
                 alfa_segment = np.random.uniform(0, 1, size=1)
 
                 x[i] = alfa_segment * x_vent_end[i_segment] + \
-                       ( 1.0 - alfa_segment ) * x_vent[i_segment] 
+                    ( 1.0 - alfa_segment ) * x_vent[i_segment] 
 
                 y[i] = alfa_segment * y_vent_end[i_segment] + \
-                       ( 1.0 - alfa_segment ) * y_vent[i_segment]
+                    ( 1.0 - alfa_segment ) * y_vent[i_segment]
 
             elif ( vent_flag == 8 ):
 
@@ -662,10 +710,10 @@ for flow in range(0,n_flows):
         dist_int[i] = 0
         descendents[i] = 0
         
+        # inside for i in range(0,n_init):
         if ( plot_lobes_flag ) or ( plot_flow_flag):
+            to_plot_centers.append([x[i],y[i]])
 
-            # plot the center of the first lobe        
-            plt.plot(x[i],y[i],'o')
         
         # compute the gradient of the topography(+ eventually the flow)
         # here the centered grid is used (Z values saved at the centers of the pixels)
@@ -688,10 +736,10 @@ for flow in range(0,n_flows):
 
         # interpolate the slopes at the edges of the pixel to find the slope at the center of the lobe
         Fx_test = ( yi_fract*( Ztot[iy+1,ix+1] - Ztot[iy+1,ix] ) + \
-                  (1.0-yi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
+                (1.0-yi_fract)*( Ztot[iy,ix+1] - Ztot[iy,ix] ) ) / cell
 
         Fy_test = ( xi_fract*( Ztot[iy+1,ix+1] - Ztot[iy,ix+1] ) + \
-                  (1.0-xi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
+                (1.0-xi_fract)*( Ztot[iy+1,ix] - Ztot[iy,ix] ) ) / cell
 
     
         # major semi-axis direction
@@ -699,7 +747,8 @@ for flow in range(0,n_flows):
         
         # slope of the topography at (x[0],y[0])
         slope = np.sqrt(np.square(Fx_test)+np.square(Fy_test))
-        
+
+
         # PERTURBE THE MAXIMUM SLOPE ANGLE ACCORDING TO PROBABILITY LAW
         
         # this expression define a coefficient used for the direction of the next slope
@@ -725,7 +774,9 @@ for flow in range(0,n_flows):
         else:
 
             angle[i] = max_slope_angle
-		
+        
+
+
         # factor for the lobe eccentricity
         aspect_ratio = min(max_aspect_ratio,1.0 + aspect_ratio_coeff * slope)
 
@@ -734,13 +785,17 @@ for flow in range(0,n_flows):
         # x2(i) is the minor semi-axis of the lobe.
         x1[i] = np.sqrt(lobe_area/np.pi) * np.sqrt(aspect_ratio)
         x2[i] = np.sqrt(lobe_area/np.pi) / np.sqrt(aspect_ratio)
-    
+
+
+
+        # inside for i in range(0,n_init): 
         if ( plot_lobes_flag ):
+            to_ellipse_patch.append([x[i], y[i], x1[i], x2[i], angle[i], 1])
 
-            patch.append(Ellipse([x[i],y[i]], 2*x1[i], 2*x2[i], angle[i], facecolor = 'none',edgecolor='k'))
 
+        # print("Line 801 (PLOTTING  took ", plotting_time )
         if ( saveraster_flag == 1 ):
-
+            
             # compute the points of the lobe
             [ xe , ye ] = ellipse( x[i] , y[i] , x1[i] , x2[i] , angle[i] , X_circle , Y_circle )
             
@@ -801,7 +856,7 @@ for flow in range(0,n_flows):
             Zdist_local = Zflow_local_int * dist_int[i] + 9999 * ( Zflow_local == 0 )
 
             Zdist[j_bottom:j_top,i_left:i_right] = np.minimum( Zdist[j_bottom:j_top,i_left:i_right] \
-                                                               , Zdist_local )
+                                                            , Zdist_local )
 
             # store the bounding box of the new lobe
             jtop_array[i] = j_top
@@ -816,7 +871,6 @@ for flow in range(0,n_flows):
                 Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left] = Zflow_local_int
                 
         if ( saveshape_flag ):
-
             # compute the lobe
             [ xe , ye ] = ellipse( x[i] , y[i] , x1[i] , x2[i] , angle[i] , X_circle , Y_circle )
 
@@ -830,11 +884,12 @@ for flow in range(0,n_flows):
 
     last_lobe = n_lobes
 
+    ''' for i in range(n_init,n_lobes): start '''
     for i in range(n_init,n_lobes):
 
         #print('i',i)
 
-        if ( n_flows == 1 ):
+        if ( n_flows == 1 and not 'SLURM_JOB_NAME' in os.environ.keys()):
             # print on screen bar with percentage of flows computed
             last_percentage = np.rint(i*20.0/(n_lobes-1))*5
             sys.stdout.write('\r')
@@ -888,7 +943,7 @@ for flow in range(0,n_flows):
 
             idx = i-1
 
-		
+        
         # save the index of the parent and the distance from first lobe of the chain    
         parent[i] = idx
         dist_int[i] = dist_int[idx] + 1
@@ -910,7 +965,7 @@ for flow in range(0,n_flows):
         # if slope = 0 the lobe is a circle (x1=x2);
         # if slope > 1 the lobe is an ellipse.
 
-		
+        
         # STEP 1: COMPUTE THE SLOPE AND THE MAXIMUM SLOPE ANGLE
         # here the centered grid is used (Z values saved at the centers of the pixels)
         # xc[ix] < lobe_center_x < xc[ix1]
@@ -929,9 +984,9 @@ for flow in range(0,n_flows):
 
         # stopping condition (lobe close the domain boundary)
         if ( ix <= 0.5 * max_cells ) or ( ix1 >= (nx - 0.5*max_cells) ) or \
-           ( iy <= 0.5 * max_cells ) or ( iy1 >= (ny - 0.5*max_cells) ) or \
-           ( Zc[iy,ix] == nd ) or ( Zc[iy1,ix1] == nd ) or \
-           ( Zc[iy,ix1] == nd ) or ( Zc[iy1,ix] == nd ):
+        ( iy <= 0.5 * max_cells ) or ( iy1 >= (ny - 0.5*max_cells) ) or \
+        ( Zc[iy,ix] == nd ) or ( Zc[iy1,ix1] == nd ) or \
+        ( Zc[iy,ix1] == nd ) or ( Zc[iy1,ix] == nd ):
 
             last_lobe = i-1
             break
@@ -945,7 +1000,7 @@ for flow in range(0,n_flows):
 
         # interpolate the elevation at the corners of the pixel to find the elevation at the center of the lobe
         zidx = xi_fract * ( yi_fract * Ztot[iy1,ix1] + (1.0-yi_fract) * Ztot[iy,ix1] ) \
-              + (1.0-xi_fract) * ( yi_fract * Ztot[iy1,ix] + (1.0-yi_fract) * Ztot[iy,ix] )
+            + (1.0-xi_fract) * ( yi_fract * Ztot[iy1,ix] + (1.0-yi_fract) * Ztot[iy,ix] )
         """
         # interpolate the slopes at the edges of the pixel to find the slope at the center of the lobe
         Fx_lobe = ( yi_fract * ( Ztot[iy1,ix1] - Ztot[iy1,ix] ) \
@@ -961,6 +1016,7 @@ for flow in range(0,n_flows):
         """
         
         # compute the lobe (npoints on the ellipse) 
+        '''HELLO YES HELP'''
         [ xe , ye ] = ellipse( x[idx] , y[idx] , x1[idx] , x2[idx] , angle[idx] , X_circle , Y_circle )
 
         # For all the points of the ellipse compute the indexes of the pixel containing the points.
@@ -984,7 +1040,7 @@ for flow in range(0,n_flows):
 
         # interpolate the grid values to find the elevation at the ellipse points
         ze = xei_fract * ( yei_fract * Ztot[iye1,ixe1] + (1.0-yei_fract) * Ztot[iye,ixe1] ) \
-              + (1.0-xei_fract) * ( yei_fract * Ztot[iye1,ixe] + (1.0-yei_fract) * Ztot[iye,ixe] )
+            + (1.0-xei_fract) * ( yei_fract * Ztot[iye1,ixe] + (1.0-yei_fract) * Ztot[iye,ixe] )
 
         # find the point on the ellipse with minimum elevation
         idx_min = np.argmin(ze)
@@ -1024,11 +1080,11 @@ for flow in range(0,n_flows):
         else:
 
             new_angle = max_slope_angle
-		
+        
 
 
         # STEP 3: ADD THE EFFECT OF INERTIA
-		   
+        
         # cos and sin of the angle of the parent lobe
         cos_angle1 = np.cos(angle[idx]*deg2rad)
         sin_angle1 = np.sin(angle[idx]*deg2rad)
@@ -1044,7 +1100,7 @@ for flow in range(0,n_flows):
         else:
 
             alfa_inertial[i] = ( 1.0 - (2.0 * np.arctan(slope) / np.pi)**inertial_exponent ) \
-                               ** ( 1.0 / inertial_exponent )
+                            ** ( 1.0 / inertial_exponent )
 
         x_avg = ( 1.0 - alfa_inertial[i] ) * cos_angle2 + alfa_inertial[i] * cos_angle1
         y_avg = ( 1.0 - alfa_inertial[i] ) * sin_angle2 + alfa_inertial[i] * sin_angle1
@@ -1059,23 +1115,23 @@ for flow in range(0,n_flows):
         # center of the new lobe in a coordinate system defined by the
         # semi-axes of the existing lobe
         a = np.tan(deg2rad*(new_angle-angle[idx]))
-		
+        
         # xt is the 1st-coordinate of the point of the boundary of the ellipse
         # definind the direction of the new lobe, in a coordinate system 
         # defined by the semi-axes of the existing lobe
         if ( np.cos(deg2rad*(new_angle-angle[idx])) > 0 ):
-		    
+            
             xt = np.sqrt( x1[idx]**2 * x2[idx]**2 / ( x2[idx]**2 + x1[idx]**2 * a**2 ) )
-		    
+            
         else:
-		    
+            
             xt = - np.sqrt( x1[idx]**2 * x2[idx]**2 / ( x2[idx]**2 + x1[idx]**2 * a**2 ) )
 
         # yt is the 2nd-coordinate of the point of the boundary of the ellipse
         # definind the direction of the new lobe, in a coordinate system 
         # defined by the semi-axes of the existing lobe
         yt = a * xt
-		
+        
         # (delta_x,delta_y) is obtained rotating the vector (xt,yt) by the
         # angle defined by the major semi-axis of the existing lobe. In this
         # way we obtain the location in a coordinate-system centered in the
@@ -1084,7 +1140,7 @@ for flow in range(0,n_flows):
 
         delta_x = xt * cos_angle1 - yt * sin_angle1
         delta_y = xt * sin_angle1 + yt * cos_angle1
-		   
+        
         # the slope coefficient is evaluated at the point of the boundary of the ellipse
         # definind by the direction of the new lobe
         
@@ -1102,7 +1158,7 @@ for flow in range(0,n_flows):
 
         # stopping condition (lobe close the domain boundary)
         if ( ix <= 0.5 * max_cells ) or ( ix1 >= nx - 0.5*max_cells ) or \
-           ( iy <= 0.5 * max_cells ) or ( iy1 >= ny - 0.5*max_cells ):
+        ( iy <= 0.5 * max_cells ) or ( iy1 >= ny - 0.5*max_cells ):
 
             #print('ix',ix,'iy',iy)
             last_lobe = i-1
@@ -1113,7 +1169,7 @@ for flow in range(0,n_flows):
 
         # ztot at the new budding point
         ze = xi_fract * ( yi_fract * Ztot[iy1,ix1] + (1.0-yi_fract) * Ztot[iy,ix1] ) \
-              + (1.0-xi_fract) * ( yi_fract * Ztot[iy1,ix] + (1.0-yi_fract) * Ztot[iy,ix] )
+            + (1.0-xi_fract) * ( yi_fract * Ztot[iy1,ix] + (1.0-yi_fract) * Ztot[iy,ix] )
 
         slope = np.maximum( 0.0 , ( zidx - ze ) / ( np.sqrt(np.square(delta_x)+np.square(delta_y) ) ) )
 
@@ -1125,15 +1181,15 @@ for flow in range(0,n_flows):
         # the same volume for all the lobes.
         new_x1 = np.sqrt(lobe_area/np.pi)*np.sqrt(aspect_ratio)
         new_x2 = np.sqrt(lobe_area/np.pi)/np.sqrt(aspect_ratio)
-		 
+        
         # v1 is the distance of the new point found on the boundary of the lobe
         # from the center of the lobe
         v1 = np.sqrt(delta_x**2 + delta_y**2)
-		
+        
         # v2 is the distance between the centers of the two lobes when they
         # intersect in one point only
         v2 = v1 + new_x1
-		
+        
         # v is the distance between the centers of the two lobes, according to 
         # the value of the parameter dist_fact   
         v = ( v1 * ( 1.0 - dist_fact ) + v2 * dist_fact ) / v1  
@@ -1144,21 +1200,20 @@ for flow in range(0,n_flows):
         x_new = x[idx] + v * delta_x
         y_new = y[idx] + v * delta_y
             
-                        
+        plotting_time = time.process_time()                
         # plot the new lobe
+        # for i in range(0,n_init):
         if ( plot_lobes_flag == 1 ):
+            to_ellipse_patch2.append([x_new,y_new,new_x1,new_x2,new_angle, 2])
 
-            patch.append(Ellipse([x_new,y_new], 2*new_x1, 2*new_x2, new_angle, \
-                                 facecolor = 'none',edgecolor='r'))
-                                
-                
+        # print("line 1207 (PLOTTING) took ", plotting_time)        
         # store the parameters of the new lobe in arrays    
         angle[i] = new_angle
         x1[i] = new_x1
         x2[i] = new_x2
         x[i] = x_new
         y[i] = y_new
-		
+        
         if ( saveshape_flag ):
 
             # compute the lobe
@@ -1169,13 +1224,13 @@ for flow in range(0,n_flows):
 
             w.poly(parts=[shape_verts.tolist()])
             w.record(str(i+1),dist_int[i],str(descendents[i]),str(parent[i]),str(flow+1))
-  
+
         # check the grid points covered by the lobe
         if ( saveraster_flag == 1 ) or ( plot_flow_flag):
             
             # compute the new lobe 
             [ xe , ye ] = ellipse( x[i], y[i], x1[i], x2[i], angle[i] , X_circle , Y_circle )
-         
+        
             # bounding box for the new lobe
             # the indexes are referred to the centers of the pixels
             min_xe = np.min(xe)
@@ -1228,7 +1283,7 @@ for flow in range(0,n_flows):
 
             # update the minimum distance in the global indexing
             Zdist[j_bottom:j_top,i_left:i_right] = np.minimum( Zdist[j_bottom:j_top,i_left:i_right] , \
-                                                               Zdist_local )
+                                                            Zdist_local )
 
             # compute the thickness of the lobe                
             lobe_thickness = thickness_min + ( i-1 ) * delta_lobe_thickness
@@ -1264,7 +1319,7 @@ for flow in range(0,n_flows):
                     print(Zflow_local_int.shape[0], j_top, j_bottom)
                     print(Zflow_local_int.shape[1], i_right , i_left)
                     print('')
- 
+
                 if ( np.max(Zflow_local.shape) > Zflow_local_array.shape[1] ):
 
                     print ('check 3')
@@ -1275,6 +1330,7 @@ for flow in range(0,n_flows):
 
                 Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left] = Zflow_local_int
 
+    ''' for i in range(n_init,n_lobes): END '''
     if ( hazard_flag ):
 
         # update the hazard map accounting for the number of descendents, representative
@@ -1294,15 +1350,15 @@ for flow in range(0,n_flows):
                 j_bottom_int = np.maximum( j_bottom , jbottom_array[parent[i]] )
                 i_left_int = np.maximum( i_left , ileft_array[parent[i]] )
                 i_right_int = np.minimum( i_right , iright_array[parent[i]] )
-                      
+                    
                 Zlocal_new = np.zeros((max_cells,max_cells),dtype=int)
                 Zlocal_parent = np.zeros((max_cells,max_cells),dtype=int)
 
 
                 Zlocal_parent = Zflow_local_array[parent[i],np.maximum(0,j_bottom_int-jbottom_array[parent[i]]): \
-                      np.minimum(j_top_int-jbottom_array[parent[i]],jtop_array[parent[i]]-jbottom_array[parent[i]]),   \
-                      np.maximum(i_left_int-ileft_array[parent[i]],0):   \
-                      np.minimum(i_right_int-ileft_array[parent[i]],iright_array[parent[i]]-ileft_array[parent[i]])]
+                    np.minimum(j_top_int-jbottom_array[parent[i]],jtop_array[parent[i]]-jbottom_array[parent[i]]),   \
+                    np.maximum(i_left_int-ileft_array[parent[i]],0):   \
+                    np.minimum(i_right_int-ileft_array[parent[i]],iright_array[parent[i]]-ileft_array[parent[i]])]
 
 
                 Zlocal_new = Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left]
@@ -1319,9 +1375,9 @@ for flow in range(0,n_flows):
                     print(j_bottom_int,j_top_int,i_left_int,i_right_int)
 
                 Zlocal_new[np.maximum(0,j_bottom_int-j_bottom):        \
-                      np.minimum(j_top_int-j_bottom,j_top-j_bottom),   \
-                      np.maximum(i_left_int-i_left,0):                 \
-                      np.minimum(i_right_int-i_left,i_right-i_left)] *= ( 1 - Zlocal_parent )
+                    np.minimum(j_top_int-j_bottom,j_top-j_bottom),   \
+                    np.maximum(i_left_int-i_left,0):                 \
+                    np.minimum(i_right_int-i_left,i_right-i_left)] *= ( 1 - Zlocal_parent )
 
 
                 Zhazard[j_bottom:j_top,i_left:i_right] += descendents[i] \
@@ -1332,12 +1388,8 @@ for flow in range(0,n_flows):
                 Zhazard[j_bottom:j_top,i_left:i_right] += descendents[i] \
                                                         * Zflow_local_array[i,0:j_top-j_bottom,0:i_right-i_left]
         
-    # plot the patches for the lobes
-    # p = PatchCollection(patch, facecolor = 'r',edgecolor='none',alpha=0.05)
-    if ( plot_lobes_flag == 1 ):
 
-        p = PatchCollection(patch, match_original = True)
-        ax.add_collection(p)
+
 
     if sys.version_info >= (3, 0):
         elapsed = (time.process_time() - start)
@@ -1348,12 +1400,30 @@ for flow in range(0,n_flows):
     est_rem_time = str(datetime.timedelta(seconds=estimated))
     
 
-if ( n_flows > 1):
+if ( n_flows > 1 and not 'SLURM_JOB_NAME' in os.environ.keys()):
     # print on screen bar with percentage of flows computed
     last_percentage = 100
     sys.stdout.write('\r')
     sys.stdout.write("[%-20s] %d%%" % ('='*20, last_percentage))
     sys.stdout.flush()
+
+
+
+if plot_lobes_flag:
+    ''' PLOTTING OUTSIDE OF LOOPS '''
+    for i in range(0, len(to_plot_centers)):
+        plt.plot(to_plot_centers[i][0],to_plot_centers[i][1],'o')
+
+    for first_el in to_ellipse_patch:
+        ellip = add_Ellipse(first_el)
+        ax.add_patch(ellip)
+
+    for second_el in to_ellipse_patch2:
+        ellip = add_Ellipse(second_el)
+        ax.add_patch(ellip)
+
+    ''' PLOTTING OUTSIDE OF LOOPS END '''
+
 
 if sys.version_info >= (3, 0):
     elapsed = (time.process_time() - start)
@@ -1361,11 +1431,12 @@ else:
     elapsed = (time.clock() - start)
 
 
+
 print ('')
 print ('')
 print ('Total number of lobes',n_lobes_tot,'Average number of lobes',int(1.0*n_lobes_tot/n_flows))
 print ('')
-print ('Time elapsed ' + str(elapsed) + ' sec.')
+print ('Time elapsed ' + str(elapsed) + ' sec.' + ' / ' + str(int(elapsed/60)) + ' min.')
 print ('')
 print ('Saving files')
 
@@ -1435,12 +1506,12 @@ if ( saveraster_flag == 1 ):
                         print('')
                         print ('Masking threshold',masking_threshold[i_thr])
                         print ('Total volume',cell**2*total_Zflow, \
-                               ' m3 Masked volume',cell**2*np.sum( masked_Zflow ), \
-                               ' m3 Volume fraction',coverage_fraction)
+                            ' m3 Masked volume',cell**2*np.sum( masked_Zflow ), \
+                            ' m3 Volume fraction',coverage_fraction)
                         print ('Total area',cell**2*np.sum( Zflow >0 ), \
-                               ' m2 Masked area',cell**2*np.sum( masked_Zflow >0 ),' m2')
+                            ' m2 Masked area',cell**2*np.sum( masked_Zflow >0 ),' m2')
                         print ('Average thickness full',total_Zflow/np.sum( Zflow >0 ), \
-                               ' m Average thickness mask',np.sum( masked_Zflow )/ np.sum( masked_Zflow >0 ),' m')
+                            ' m Average thickness mask',np.sum( masked_Zflow )/ np.sum( masked_Zflow >0 ),' m')
 
                     output_thickness = run_name + '_avg_thick.txt'
                     with open(output_thickness, 'a') as the_file:
@@ -1461,7 +1532,7 @@ if ( saveraster_flag == 1 ):
                     output_masked = run_name + '_thickness_masked' + '_' + str(masking_threshold[i_thr]).replace('.','_') + '.asc'
 
                     np.savetxt(output_masked, np.flipud((1-masked_Zflow.mask)*Zflow), \
-                               header=header, fmt='%1.5f',comments='')
+                            header=header, fmt='%1.5f',comments='')
 
                     print ('')
                     print (output_masked + ' saved')
@@ -1532,7 +1603,7 @@ if ( saveraster_flag == 1 ):
                 output_haz_masked = run_name + '_hazard_masked' + '_' + str(masking_threshold[i_thr]).replace('.','_') + '.asc'
 
                 np.savetxt(output_haz_masked, np.flipud((1-masked_Zflow.mask)*Zhazard), \
-                           header=header, fmt='%1.5f',comments='')
+                        header=header, fmt='%1.5f',comments='')
 
                 print ('')
                 print (output_haz_masked + ' saved')
@@ -1587,12 +1658,15 @@ if ( saveraster_flag == 1 ):
 
         plt.pcolormesh(Xc, Yc, masked_Zflow)
 
+
+
 if ( plot_flow_flag ) or ( plot_lobes_flag):
     
     plt.axis('equal')
     plt.ylim([ycmin,ycmax])
     plt.xlim([xcmin,xcmax])
-    plt.show()
+    plt.savefig("plotted.png")
+    # plt.show()
 
 
 
