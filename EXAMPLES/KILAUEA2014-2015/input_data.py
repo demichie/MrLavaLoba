@@ -24,6 +24,12 @@ vent_flag = 0
 x_vent = [ 288830 ]
 y_vent = [ 2150362 ]
 
+#this determines how large an area will be clipped from the DEM. smaller = faster, but need to ensure nothing runs out of the domain
+east_to_vent = 5000.0
+west_to_vent = 5000.0
+south_to_vent = 5000.0
+north_to_vent = 5000.0
+
 # If this flag is set to 1 then a raster map is saved where the values
 # represent the probability of a cell to be covered. 
 hazard_flag = 0
