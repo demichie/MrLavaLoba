@@ -1419,7 +1419,7 @@ for flow in range(0, n_flows):
 
         else:
 
-            alfa_inertial[i] = (1.0 - (2.0 * np.arctan(slope) / np.pi) **
+            alfa_inertial[i] = (1.0 - (2.0 * np.arctan(slope) / np.pi)**
                                 inertial_exponent)**(1.0 / inertial_exponent)
 
         x_avg = (1.0 - alfa_inertial[i]) * \
@@ -2093,27 +2093,78 @@ if (saveraster_flag == 1):
 
                 total_Zflow = np.sum(Zflow)
 
-                # for i in range(1,max_Zhazard):
-                for i in np.unique(Zhazard):
+                i_list = np.unique(Zhazard)
+                i0 = 0
+                i2 = len(i_list)
 
-                    masked_Zflow = ma.masked_where(Zhazard < i, Zflow)
+                masked_Zflow0 = ma.masked_where(Zhazard < i0, Zflow)
+                if (flag_threshold == 1):
+
+                    volume_fraction = np.sum(masked_Zflow0) / total_Zflow
+
+                    coverage_fraction0 = volume_fraction
+
+                else:
+
+                    area_fraction = np.true_divide(np.sum(masked_Zflow0 > 0),
+                                                   np.sum(Zflow > 0))
+
+                    coverage_fraction0 = area_fraction
+
+                f0 = coverage_fraction0 - masking_threshold
+
+                masked_Zflow2 = ma.masked_where(Zhazard < i2, Zflow)
+                if (flag_threshold == 1):
+
+                    volume_fraction = np.sum(masked_Zflow2) / total_Zflow
+
+                    coverage_fraction2 = volume_fraction
+
+                else:
+
+                    area_fraction = np.true_divide(np.sum(masked_Zflow2 > 0),
+                                                   np.sum(Zflow > 0))
+
+                    coverage_fraction2 = area_fraction
+
+                f2 = coverage_fraction2 - masking_threshold
+
+                while (i2 - i0) > 1:
+
+                    i1 = int(np.ceil(0.5 * (i0 + i2)))
+
+                    masked_Zflow1 = ma.masked_where(Zhazard < i1, Zflow)
 
                     if (flag_threshold == 1):
 
-                        volume_fraction = np.sum(masked_Zflow) / total_Zflow
+                        volume_fraction = np.sum(masked_Zflow1) / total_Zflow
 
-                        coverage_fraction = volume_fraction
+                        coverage_fraction1 = volume_fraction
 
                     else:
 
                         area_fraction = np.true_divide(
-                            np.sum(masked_Zflow > 0), np.sum(Zflow > 0))
+                            np.sum(masked_Zflow1 > 0), np.sum(Zflow > 0))
 
-                        coverage_fraction = area_fraction
+                        coverage_fraction1 = area_fraction
 
-                    if (coverage_fraction < masking_threshold):
+                    f1 = coverage_fraction1 - masking_threshold
+
+                    if (f0 * f1) < 0:
+
+                        i2 = i1
+                        f2 = f1
+
+                    else:
+
+                        i0 = i1
+                        f0 = f1
+
+                    if abs(f1) < 0.0001:
 
                         break
+
+                masked_Zflow = masked_Zflow1
 
                 output_haz_masked = run_name + '_hazard_masked' + '_' + \
                     str(masking_threshold[i_thr]).replace('.', '_') + '.asc'
