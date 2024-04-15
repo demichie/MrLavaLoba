@@ -194,8 +194,6 @@ print("")
 
 # read the run parameters form the file inpot_data.py
 
-filling_parameter = 1.0 - thickening_parameter
-
 n_vents = len(x_vent)
 
 try:
@@ -517,6 +515,199 @@ Xc, Yc = np.meshgrid(xc, yc)
 
 Zc = np.zeros((ny, nx))
 np.copyto(Zc, arr)
+
+filling_parameter = (1.0 - thickening_parameter) * np.ones_like(Zc)
+
+try:
+
+    from input_data import channel_file
+    from input_data import alfa_channel
+    from input_data import d1
+    from input_data import d2
+    from input_data import eps
+
+    check_channel_file = exists(channel_file)
+
+except ImportError:
+
+    print('Channel parameters not defined:')
+    print('- channel_file')
+    print('- d1')
+    print('- d2')
+    print('- eps')
+    print('- alfa_chaneel')
+
+    check_channel_file = False
+    alfa_channel = 0.0
+
+if check_channel_file:
+
+    import shapefile
+    from shapely.geometry import Point, LineString, MultiPoint
+    from shapely.ops import nearest_points
+
+    # arrays of components of the direction vectors computer from channel
+    vx = np.zeros_like(Xc)
+    vy = np.zeros_like(Yc)
+
+    # arrays of distances from channel
+    distxy = np.zeros_like(Yc)
+
+    print('')
+
+    print('Reading shapefile ' + channel_file)
+
+    sf = shapefile.Reader(channel_file)
+
+    shapes = sf.shapes()
+    shapeRecs = sf.shapeRecords()
+    points = shapeRecs[0].shape.points[0:]
+    ln = LineString(points)
+
+    pnew_x = points[-1][0] + 200.0 * (points[-1][0] - points[-2][0])
+    pnew_y = points[-1][1] + 200.0 * (points[-1][1] - points[-2][1])
+
+    points.append([pnew_x, pnew_y])
+
+    nlx = []
+    nly = []
+    for i in range(len(points) - 1):
+        nnx = points[i + 1][0] - points[i][0]
+        nny = points[i + 1][1] - points[i][1]
+        nn = np.sqrt(nnx**2 + nny**2)
+        nlx.append(nnx / nn)
+        nly.append(nny / nn)
+        # print(nlx[i],nly[i])
+
+    minx, miny, maxx, maxy = ln.bounds
+
+    print('Channel Bounding Box', minx, miny, maxx, maxy)
+
+    dx = 3.0 * d2
+
+    minx = minx - dx
+    maxx = maxx + dx
+    miny = miny - dx
+    maxy = maxy + dx
+
+    min_xe = minx
+    max_xe = maxx
+
+    min_ye = miny
+    max_ye = maxy
+
+    xi = (min_xe - xcmin) / cell
+    ix = np.floor(xi)
+    i_left = ix.astype(int)
+
+    xi = (max_xe - xcmin) / cell
+    ix = np.floor(xi)
+    i_right = ix.astype(int) + 2
+
+    yj = (min_ye - ycmin) / cell
+    jy = np.floor(yj)
+    j_bottom = jy.astype(int)
+
+    yj = (max_ye - ycmin) / cell
+    jy = np.floor(yj)
+    j_top = jy.astype(int) + 2
+
+    print('i_left,i_right', i_left, i_right)
+    print('j_bottom,j_top', j_bottom, j_top)
+
+    # define the subgrid of pixels to check for coverage
+    Xgrid = Xc[j_bottom:j_top, i_left:i_right]
+    Ygrid = Yc[j_bottom:j_top, i_left:i_right]
+
+    xgrid = Xgrid[0, :]
+    ygrid = Ygrid[:, 0]
+
+    coords = np.vstack((Xgrid.ravel(), Ygrid.ravel())).T
+    pts = MultiPoint(coords)
+    """
+    dist_pl = np.zeros_like(arr)
+
+    for idx, valx in enumerate(xgrid):
+        for idy, valy in enumerate(ygrid):
+
+            pt = Point(valx,valy)
+            dist = np.exp(-pt.distance(ln)**2 / ( 2.0*d1**2))
+            dist_pl[j_bottom+idy,i_left+idx] = dist
+            filling_parameter[j_bottom+idy,i_left+idx] *= ( 1.0 - dist)
+
+
+    header = "ncols     %s\n" % arr.shape[1]
+    header += "nrows    %s\n" % arr.shape[0]
+    header += "xllcorner " + str(lx) +"\n"
+    header += "yllcorner " + str(ly) +"\n"
+    header += "cellsize " + str(cell) +"\n"
+    header += "NODATA_value 0\n"
+
+    print('dist_pl',np.shape(dist_pl))
+
+    output_full = run_name + '_channel_distance.asc'
+    Zc -= 10*dist_pl
+
+
+    print('Zc',np.shape(Zc))
+    alfa_channel = 0.0
+
+    np.savetxt(output_full, np.flipud(dist_pl), header=header,
+               fmt='%1.5f',comments='')
+    """
+    # print(ciao)
+
+    for idx, valx in enumerate(xgrid):
+
+        for idy, valy in enumerate(ygrid):
+
+            pt = Point(valx, valy)
+
+            p1, p2 = nearest_points(ln, pt)
+            xx, yy = p1.coords.xy
+            vx1 = xx - valx
+            vy1 = yy - valy
+            v1mod = np.sqrt(vx1**2 + vy1**2)
+            vx1 = vx1 / v1mod
+            vy1 = vy1 / v1mod
+
+            dist = []
+            for i in range(len(points) - 1):
+
+                dist.append(
+                    np.maximum(eps, pt.distance(LineString(points[i:i + 2]))))
+
+            dist = np.array(dist)**2
+            vx2 = np.sum(np.array(nlx) / dist) / np.sum(1.0 / np.array(dist))
+            vy2 = np.sum(np.array(nly) / dist) / np.sum(1.0 / np.array(dist))
+
+            v2mod = np.sqrt(vx2**2 + vy2**2)
+            vx2 = vx2 / v2mod
+            vy2 = vy2 / v2mod
+
+            dist_pl = np.exp(-pt.distance(LineString(points[0:]))**2 /
+                             (2.0 * d1**2))
+            vx[j_bottom + idy,
+               i_left + idx] = dist_pl * vx2 + (1.0 - dist_pl) * vx1
+            vy[j_bottom + idy,
+               i_left + idx] = dist_pl * vy2 + (1.0 - dist_pl) * vy1
+
+            vmod = np.sqrt(vx[j_bottom + idy, i_left + idx]**2 +
+                           vy[j_bottom + idy, i_left + idx]**2)
+
+            if (vmod > 0):
+                vx[j_bottom + idy,
+                   i_left + idx] = vx[j_bottom + idy, i_left + idx] / vmod
+                vy[j_bottom + idy,
+                   i_left + idx] = vy[j_bottom + idy, i_left + idx] / vmod
+
+            dist_pl = np.exp(-pt.distance(LineString(points[0:-1]))**2 /
+                             (2.0 * d2**2))
+
+            distxy[j_bottom + idy, i_left + idx] = dist_pl
+
+    print('Channel map completed')
+    print('')
 
 try:
 
@@ -972,8 +1163,8 @@ for flow in range(0, n_flows):
 
             # change 2022/01/13
             # FROM HERE
-            Ztot[j_bottom:j_top, i_left:i_right] += filling_parameter * \
-                lobe_thickness * Zflow_local
+            Ztot[j_bottom:j_top, i_left:i_right] += filling_parameter[
+                j_bottom:j_top, i_left:i_right] * lobe_thickness * Zflow_local
 
             # TO HERE
 
@@ -1228,7 +1419,7 @@ for flow in range(0, n_flows):
 
         else:
 
-            alfa_inertial[i] = (1.0 - (2.0 * np.arctan(slope) / np.pi) **
+            alfa_inertial[i] = (1.0 - (2.0 * np.arctan(slope) / np.pi)**
                                 inertial_exponent)**(1.0 / inertial_exponent)
 
         x_avg = (1.0 - alfa_inertial[i]) * \
@@ -1239,6 +1430,49 @@ for flow in range(0, n_flows):
         angle_avg = np.mod(180 * np.arctan2(y_avg, x_avg) / np.pi, 360)
 
         new_angle = angle_avg
+
+        if (alfa_channel > 0.0):
+
+            old_angle = new_angle
+
+            # interpolate the vector at the corners of the pixel to find the
+            # vector at the center of the lobe
+            cos_angle_old = np.cos(np.radians(old_angle))
+            sin_angle_old = np.sin(np.radians(old_angle))
+
+            # print('cos_angle1,sin_angle1',cos_angle1,sin_angle1)
+
+            x_avg2 = xi_fract * (
+                yi_fract * vx[iy1, ix1] + (1.0 - yi_fract) * vx[iy, ix1]) + (
+                    1.0 - xi_fract) * (yi_fract * vx[iy1, ix] +
+                                       (1.0 - yi_fract) * vx[iy, ix])
+            y_avg2 = xi_fract * (
+                yi_fract * vy[iy1, ix1] + (1.0 - yi_fract) * vy[iy, ix1]) + (
+                    1.0 - xi_fract) * (yi_fract * vy[iy1, ix] +
+                                       (1.0 - yi_fract) * vy[iy, ix])
+
+            if (x_avg2**2 + y_avg2**2 > 0.0):
+
+                cos_angle_new = x_avg2 / np.sqrt(x_avg2**2 + y_avg2**2)
+                sin_angle_new = y_avg2 / np.sqrt(x_avg2**2 + y_avg2**2)
+
+                # print('cos_angle2,sin_angle2',cos_angle2,sin_angle2)
+
+                distxyidx = xi_fract * (
+                    yi_fract * distxy[iy1, ix1] +
+                    (1.0 - yi_fract) * distxy[iy, ix1]) + (
+                        1.0 - xi_fract) * (yi_fract * distxy[iy1, ix] +
+                                           (1.0 - yi_fract) * distxy[iy, ix])
+
+                x_avg = (1.0 - alfa_channel*distxyidx) * \
+                    cos_angle_old + alfa_channel*distxyidx * cos_angle_new
+                y_avg = (1.0 - alfa_channel*distxyidx) * \
+                    sin_angle_old + alfa_channel*distxyidx * sin_angle_new
+
+                angle_avg = np.mod(180.0 * np.arctan2(y_avg, x_avg) / np.pi,
+                                   360.0)
+
+                new_angle = angle_avg
 
         # STEP 4: DEFINE THE SEMI-AXIS OF THE NEW LOBE
 
@@ -1419,8 +1653,8 @@ for flow in range(0, n_flows):
 
             # change 2022/01/13
 
-            Ztot[j_bottom:j_top, i_left:i_right] += filling_parameter * \
-                lobe_thickness*Zflow_local
+            Ztot[j_bottom:j_top, i_left:i_right] += filling_parameter[
+                j_bottom:j_top, i_left:i_right] * lobe_thickness * Zflow_local
             # TO HERE
 
             # save the bounding box of the i-th lobe
@@ -1859,27 +2093,78 @@ if (saveraster_flag == 1):
 
                 total_Zflow = np.sum(Zflow)
 
-                # for i in range(1,max_Zhazard):
-                for i in np.unique(Zhazard):
+                i_list = np.unique(Zhazard)
+                i0 = 0
+                i2 = len(i_list)
 
-                    masked_Zflow = ma.masked_where(Zhazard < i, Zflow)
+                masked_Zflow0 = ma.masked_where(Zhazard < i0, Zflow)
+                if (flag_threshold == 1):
+
+                    volume_fraction = np.sum(masked_Zflow0) / total_Zflow
+
+                    coverage_fraction0 = volume_fraction
+
+                else:
+
+                    area_fraction = np.true_divide(np.sum(masked_Zflow0 > 0),
+                                                   np.sum(Zflow > 0))
+
+                    coverage_fraction0 = area_fraction
+
+                f0 = coverage_fraction0 - masking_threshold
+
+                masked_Zflow2 = ma.masked_where(Zhazard < i2, Zflow)
+                if (flag_threshold == 1):
+
+                    volume_fraction = np.sum(masked_Zflow2) / total_Zflow
+
+                    coverage_fraction2 = volume_fraction
+
+                else:
+
+                    area_fraction = np.true_divide(np.sum(masked_Zflow2 > 0),
+                                                   np.sum(Zflow > 0))
+
+                    coverage_fraction2 = area_fraction
+
+                f2 = coverage_fraction2 - masking_threshold
+
+                while (i2 - i0) > 1:
+
+                    i1 = int(np.ceil(0.5 * (i0 + i2)))
+
+                    masked_Zflow1 = ma.masked_where(Zhazard < i1, Zflow)
 
                     if (flag_threshold == 1):
 
-                        volume_fraction = np.sum(masked_Zflow) / total_Zflow
+                        volume_fraction = np.sum(masked_Zflow1) / total_Zflow
 
-                        coverage_fraction = volume_fraction
+                        coverage_fraction1 = volume_fraction
 
                     else:
 
                         area_fraction = np.true_divide(
-                            np.sum(masked_Zflow > 0), np.sum(Zflow > 0))
+                            np.sum(masked_Zflow1 > 0), np.sum(Zflow > 0))
 
-                        coverage_fraction = area_fraction
+                        coverage_fraction1 = area_fraction
 
-                    if (coverage_fraction < masking_threshold):
+                    f1 = coverage_fraction1 - masking_threshold
+
+                    if (f0 * f1) < 0:
+
+                        i2 = i1
+                        f2 = f1
+
+                    else:
+
+                        i0 = i1
+                        f0 = f1
+
+                    if abs(f1) < 0.0001:
 
                         break
+
+                masked_Zflow = masked_Zflow1
 
                 output_haz_masked = run_name + '_hazard_masked' + '_' + \
                     str(masking_threshold[i_thr]).replace('.', '_') + '.asc'
